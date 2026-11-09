@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>가스 누출 조기 경보 시스템</title>
+<style>
+:root{--ink:#12263e;--muted:#53677d;--line:#dce5ee;--blue:#195fba;--bg:#f1f5fa;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1100px;margin:auto;padding:28px 22px 36px}h1,h2,p{margin:0}h1{font-size:clamp(24px,4.6vw,34px);line-height:1.35;letter-spacing:-.05em}h2{font-size:18px;letter-spacing:-.025em}.eyebrow{font-size:12px;font-weight:750;letter-spacing:.14em;color:var(--blue);margin-bottom:8px}.muted,.small{color:var(--muted)}.small{font-size:12px}.sub{margin-top:8px}.topline,.panelhead,.actions,.statusline{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.topline{margin-bottom:23px}.badge{display:inline-flex;gap:7px;align-items:center;background:#e4ebf3;border:1px solid #d0dbe8;color:#435871;border-radius:99px;padding:6px 11px;font-size:12px;font-weight:650}.dot{width:7px;height:7px;border-radius:50%;background:currentColor}.connected{background:#e5f5ee;color:#126245;border-color:#bde0cf}.simulation{background:#fff2ce;border:2px solid #be7900;color:#704600;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-weight:700}[hidden]{display:none!important}.banner{border:1px solid #c5d2e1;background:#e9eff7;color:#344b65;border-radius:16px;padding:20px 22px;border-left:6px solid #7891af}.banner.normal{background:#e7f6ed;border-color:#b9dec8;border-left-color:#228456;color:#165d3b}.banner.warning{background:#fff4d7;border-color:#efd390;border-left-color:#bd7b00;color:#765000}.banner.danger{background:#feebeb;border-color:#edb9b9;border-left-color:#c83737;color:#9c2121}.banner.fault{background:#f3eafa;border-color:#dbc5ed;border-left-color:#8850b0;color:#653388}.banner.warmup{background:#eaf2fe;border-color:#c1d6f2;border-left-color:#3f7cc7;color:#235b9e}.state{font-size:24px;font-weight:780;letter-spacing:-.03em}.statecaption{font-size:13px;margin-top:5px}.livetime{font-size:12px;text-align:right}.notice{padding:10px 2px 0;font-size:13px;color:#735217;min-height:25px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}.card,.panel{background:var(--white);border:1px solid var(--line);border-radius:14px}.card{padding:17px 18px}.label{font-size:12px;color:var(--muted);font-weight:650}.value{font-size:clamp(25px,3.2vw,35px);font-weight:760;line-height:1.45;font-variant-numeric:tabular-nums;letter-spacing:-.03em}.unit{font-size:14px;font-weight:500;letter-spacing:0}.card .small{margin-top:3px}.stale .value{color:#7f8e9f}.panel{padding:20px;margin-top:16px}.panelhead{margin-bottom:13px}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.legend span{display:inline-flex;align-items:center;gap:5px}.key{width:18px;border-top:2px solid #1967c4;display:inline-block}.key.warn{border-color:#b67b0e;border-top-style:dashed}.key.danger{border-color:#c83737;border-top-style:dashed}canvas{display:block;width:100%;height:258px}.chartnote{font-size:12px;color:var(--muted);padding-top:7px}.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);margin-top:13px;padding-top:15px;gap:10px}.statvalue{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}.lower{display:grid;grid-template-columns:1.05fr 1fr;gap:16px}.lower .panel{margin-top:16px}button,.download{font:inherit;font-size:13px;font-weight:650;border:1px solid #c6d5e6;border-radius:8px;background:#eef4fb;color:#174e8d;padding:10px 13px;min-height:42px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}button.primary{background:var(--blue);border-color:var(--blue);color:#fff}button:disabled{opacity:.57;cursor:not-allowed}button:focus-visible,a:focus-visible{outline:3px solid #779ed2;outline-offset:3px}.buttons{display:flex;gap:8px;flex-wrap:wrap;margin:11px 0 7px}.setting+.setting{border-top:1px solid var(--line);margin-top:17px;padding-top:15px}.setting strong{font-size:14px}.definition{display:grid;grid-template-columns:110px 1fr;gap:7px 10px;font-size:13px;margin:14px 0}.definition dt{color:var(--muted)}.definition dd{margin:0;font-weight:650}.tablewrap{overflow:auto;max-height:330px}table{border-collapse:collapse;width:100%;font-size:12px;text-align:left}th,td{padding:10px 9px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);white-space:nowrap;background:#f7f9fc;position:sticky;top:0}td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums}td:nth-child(2){font-variant-numeric:tabular-nums}.eventstate{font-weight:700;white-space:nowrap}.event-danger{color:#af2929}.event-warning{color:#956200}.event-fault{color:#784399}.empty{text-align:center;color:var(--muted);padding:23px}footer{margin-top:22px;font-size:12px;color:var(--muted)}footer p+p{margin-top:5px}.footmeta{font-variant-numeric:tabular-nums}.note{background:#f4f7fb;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--muted)}
+@media(max-width:720px){main{padding:20px 14px 28px}.topline{gap:14px}.metrics{grid-template-columns:repeat(2,1fr);gap:10px}.card{padding:14px}.lower{grid-template-columns:1fr;gap:0}.panel{padding:16px}.banner{padding:16px}.livetime{text-align:left}.stats{grid-template-columns:repeat(2,1fr);gap:12px}.state{font-size:22px}.definition{grid-template-columns:100px 1fr}canvas{height:240px}}
+</style>
+</head>
+<body>
+<main>
+  <header class="topline">
+    <div><p class="eyebrow">PICO W × MQ-2</p><h1>가스 누출 조기 경보 시스템</h1><p class="muted sub">센서의 변화부터 경고 기록까지, 한눈에 확인하세요.</p></div>
+    <span id="connection" class="badge"><span class="dot"></span><span id="connectionText">연결 확인 중</span></span>
+  </header>
+  <div id="simulation" class="simulation" hidden>모의 테스트 모드 · 실제 센서를 측정하지 않습니다. CSV에도 모의 측정으로 기록됩니다.</div>
+  <section id="banner" class="banner" aria-live="polite" aria-atomic="true">
+    <div class="statusline"><div><div id="status" class="state">센서 연결 확인 중</div><p id="bannerDetail" class="statecaption">측정값을 받으면 현재 상태를 표시합니다.</p></div><p id="liveTime" class="livetime">마지막 수신: 없음</p></div>
+  </section>
+  <p id="health" class="notice" aria-live="polite"></p>
+  <div id="metrics" class="metrics">
+    <section class="card"><p class="label">현재 ADC 측정값</p><p id="raw" class="value">—</p><p id="rawNote" class="small">범위 0–65,535</p></section>
+    <section class="card"><p class="label">이전 측정 대비 변화</p><p id="change" class="value">—</p><p id="rate" class="small">변화 속도: —</p></section>
+    <section class="card"><p class="label">Pico ADC 핀 전압</p><p class="value"><span id="voltage">—</span> <span class="unit">V</span></p><p class="small">분압 후 GP26 입력 기준</p></section>
+    <section class="card"><p class="label">최근 유효 측정 개수</p><p class="value"><span id="count">—</span><span id="capacity" class="unit"></span></p><p id="total" class="small">부팅 후 총 측정: —</p></section>
+  </div>
+  <section class="panel">
+    <div class="panelhead"><h2>최근 측정값</h2><div class="legend"><span><i class="key"></i>ADC</span><span><i class="key warn"></i><span id="warningLegend">주의 기준</span></span><span><i class="key danger"></i><span id="dangerLegend">위험 기준</span></span></div></div>
+    <canvas id="chart" role="img" aria-label="최근 ADC 측정값과 주의·위험 기준을 표시하는 선 그래프"></canvas>
+    <p id="chartNote" class="chartnote">세로축: ADC 값 · 가로축: 부팅 후 경과 시간(초) · 측정 실패 구간은 선을 연결하지 않습니다.</p>
+    <div class="stats"><div><p class="label">최근 평균</p><p id="average" class="statvalue">—</p></div><div><p class="label">최근 최댓값</p><p id="maximum" class="statvalue">—</p></div><div><p class="label">최근 최솟값</p><p id="minimum" class="statvalue">—</p></div><div><p class="label">ADC 전체 범위 대비</p><p id="percent" class="statvalue">—</p></div></div>
+  </section>
+  <div class="lower">
+    <section class="panel">
+      <h2>화면과 소리 알림</h2>
+      <div class="setting"><p class="small sub">화면 경보는 자동으로 표시됩니다. 소리는 아래 버튼을 직접 눌러 켜세요.</p><div class="buttons"><button id="soundButton" class="primary" type="button" aria-pressed="false">경보 소리 켜기</button><button id="soundTest" type="button">소리 테스트</button></div><p id="soundStatus" class="small" aria-live="polite">브라우저 경보 소리: 꺼짐</p></div>
+      <div class="setting"><strong>브라우저 시스템 알림</strong><div class="buttons"><button id="notifyButton" type="button">시스템 알림 허용</button></div><p id="notifyStatus" class="small" aria-live="polite">지원 여부를 확인하는 중입니다.</p></div>
+      <p class="note">이 화면을 닫거나 휴대폰을 잠그면 브라우저 알림·소리를 보장할 수 없습니다. 백그라운드 푸시는 별도 구현이 필요합니다. Pico의 LED 경보는 브라우저 설정과 독립적으로 작동합니다.</p>
+    </section>
+    <section class="panel">
+      <h2>현재 판정 설정</h2>
+      <dl class="definition"><dt>주의 진입 기준</dt><dd id="warningSetting">—</dd><dt>위험 진입 기준</dt><dd id="dangerSetting">—</dd><dt>연속 확인</dt><dd id="confirmSetting">—</dd><dt>해제 여유값</dt><dd id="hysteresisSetting">—</dd><dt>급상승 확인</dt><dd id="riseSetting">—</dd><dt>예열 안내</dt><dd id="warmupSetting">—</dd></dl>
+      <p class="small">기준은 ADC 원시값에 대한 실험용 설정입니다. 짧은 변화는 연속 확인으로 걸러내며, 해제 기준을 낮춰 경계값 부근의 반복 경보를 줄입니다.</p>
+      <p class="note">예열 타이머가 끝나도 센서 안정화·교정이 완료됐다는 뜻은 아닙니다. 예열 중에도 높은 측정값의 경보는 작동합니다.</p>
+    </section>
+  </div>
+  <section class="panel">
+    <div class="panelhead"><h2>상태 변화와 경고 기록</h2><div class="actions"><a class="download" href="/history.csv" download="gas_history.csv">측정 CSV</a><a class="download" href="/events.csv" download="gas_events.csv">경고 CSV</a></div></div>
+    <div class="tablewrap"><table><thead><tr><th scope="col">부팅 후 시간</th><th scope="col">ADC</th><th scope="col">상태</th><th scope="col">내용</th></tr></thead><tbody id="events"><tr><td colspan="4" class="empty">아직 수신한 기록이 없습니다.</td></tr></tbody></table></div>
+    <p id="historyNote" class="small sub">측정·경고 기록은 Pico의 메모리에 보관되며 전원을 끄거나 재시작하면 지워집니다. 필요한 기록은 CSV로 내려받으세요.</p>
+  </section>
+  <footer><p><strong>교육용 시제품 · ADC 값과 비율은 가스 농도(ppm)가 아닙니다.</strong> 인증된 가스 경보기를 대체할 수 없습니다.</p><p id="deviceInfo" class="footmeta">Pico 연결 확인 중 · 대시보드 2026.11</p></footer>
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const finite = value => typeof value === "number" && Number.isFinite(value);
+const number = (value, digits = 0) => finite(value) ? value.toLocaleString("ko-KR", {maximumFractionDigits: digits}) : "—";
+const put = (id, value) => { $(id).textContent = value; };
+const alarmStates = ["warning", "danger", "fault"];
+const stateNames = {starting:"측정 준비", warmup:"예열 안내 중", normal:"정상", warning:"주의", danger:"위험", fault:"센서 점검 필요"};
+let latest = null, boot = null, lastSample = null, lastAdvance = 0, lastReply = 0;
+let fresh = false, requestFailed = true, reportedAge = Infinity, previousAlert = null;
+let audioContext = null, soundEnabled = false, lastBeep = -Infinity, oscillators = [];
+let notificationEnabled = false, eventKey = "", latestReason = "센서 데이터 연결 확인 중";
+
+function currentFresh(now = performance.now()) {
+  const limit = latest && finite(latest.device.stale_sample_ms) ? latest.device.stale_sample_ms : 4500;
+  return Boolean(latest && !requestFailed && now - lastReply < 4500 &&
+    now - lastAdvance < limit && reportedAge + now - lastReply < limit);
+}
+function alarmActive() { return fresh && latest && alarmStates.includes(latest.current.state); }
+function updateAge() {
+  if (!lastReply) return;
+  const age = Math.max(0, Math.floor((performance.now() - lastReply) / 1000));
+  put("liveTime", "마지막 수신: " + age + "초 전 · 부팅 후 " + number(latest.current.time, 1) + "초");
+}
+function markUnavailable(reason) {
+  fresh = false;
+  previousAlert = null;
+  $("banner").className = "banner";
+  $("connection").className = "badge";
+  $("metrics").classList.add("stale");
+  put("connectionText", "현재 상태 확인 불가");
+  put("status", "측정 연결 확인 필요");
+  put("bannerDetail", reason + (latest ? " · 화면의 수치는 마지막 수신값입니다." : ". Pico의 전원과 Wi-Fi를 확인하세요."));
+  put("rawNote", latest ? "오래된 값 · 현재 상태 판단 불가" : "아직 측정값을 받지 못했습니다.");
+  stopSound();
+}
+function renderStatus(data) {
+  const c = data.current;
+  const known = Object.prototype.hasOwnProperty.call(stateNames, c.state);
+  $("banner").className = "banner " + (known ? c.state : "");
+  $("connection").className = "badge connected";
+  $("metrics").classList.remove("stale");
+  put("connectionText", "실시간 수신 중");
+  put("status", known ? stateNames[c.state] : "상태 확인 필요");
+  let text = c.state === "normal" ? "현재 설정에서 경보 조건이 확인되지 않았습니다." :
+    c.state === "warning" ? "주의 조건이 연속 확인되었습니다. 센서와 주변 상황을 확인하세요." :
+    c.state === "danger" ? "위험 조건이 확인되었습니다. 실제 누출이 의심되면 안전한 장소로 이동하세요." :
+    c.state === "fault" ? "센서 신호를 신뢰하기 어렵습니다. 전원과 배선을 점검하세요." :
+    c.state === "warmup" ? "초기 측정값은 불안정할 수 있습니다. 예열 중에도 경보를 판정합니다." : "첫 측정값을 기다리고 있습니다.";
+  if (finite(c.warmup_remaining) && c.warmup_remaining > 0) text += " 예열 안내 " + number(c.warmup_remaining) + "초 남음.";
+  if (c.pending) text += " " + c.pending;
+  put("bannerDetail", text);
+  put("rawNote", "범위 0–65,535 · " + (c.source === "simulation" ? "모의 측정" : "센서 측정"));
+  if (c.state !== previousAlert) {
+    previousAlert = c.state;
+    if (alarmStates.includes(c.state)) showNotification();
+  }
+  maybeSound();
+}
+function render(data) {
+  const c = data.current, s = data.stats, config = data.settings;
+  $("simulation").hidden = !(data.device.simulation || c.source === "simulation");
+  put("raw", number(c.raw));
+  put("change", finite(c.change) ? (c.change > 0 ? "+" : "") + number(c.change) : "—");
+  put("rate", "변화 속도: " + (finite(c.rise_per_second) && c.rise_per_second > 0 ? "+" : "") + number(c.rise_per_second, 1) + " /초");
+  put("voltage", finite(c.voltage) ? c.voltage.toFixed(3) : "—");
+  put("count", number(s.count)); put("capacity", " / " + number(config.history_size));
+  put("total", "부팅 후 총 측정: " + number(s.total_count) + "회 (실패 포함)");
+  put("average", number(s.average, 1)); put("maximum", number(s.maximum)); put("minimum", number(s.minimum));
+  put("percent", finite(c.percent) ? number(c.percent, 1) + "%" : "—");
+  let health = c.health_message || "";
+  if (c.rapid_rise) health = "급상승 감지 · " + health;
+  put("health", health);
+  put("warningLegend", "주의 " + number(config.warning_level)); put("dangerLegend", "위험 " + number(config.danger_level));
+  put("warningSetting", "ADC " + number(config.warning_level) + " 이상");
+  put("dangerSetting", "ADC " + number(config.danger_level) + " 이상");
+  put("confirmSetting", "진입 " + number(config.enter_count) + "회 / 해제 " + number(config.exit_count) + "회");
+  put("hysteresisSetting", "ADC " + number(config.hysteresis));
+  put("riseSetting", "초당 +" + number(config.rapid_rise_per_second) + " 이상 " + number(config.rapid_rise_count) + "회");
+  put("warmupSetting", number(config.warmup_seconds) + "초 · 남은 시간 " + number(c.warmup_remaining) + "초");
+  put("historyNote", "최근 측정 " + number(config.history_size) + "개와 경고 " + number(config.event_size) + "개를 메모리에 보관합니다. 재시작하면 지워지므로 필요한 기록은 CSV로 내려받으세요.");
+  put("deviceInfo", "Pico " + (data.device.ip || "주소 확인 중") + " · 실행 " + String(data.boot_id || "—") + " · 펌웨어 " + String(data.device.firmware_version || "—") + " · 대시보드 2026.11");
+  drawChart(); renderEvents(data.events); updateAge();
+  if (fresh) renderStatus(data); else markUnavailable(latestReason);
+}
+function renderEvents(events) {
+  const key = boot + ":" + events.map(e => e.id).join(",");
+  if (key === eventKey) return;
+  eventKey = key;
+  const body = $("events");
+  body.textContent = "";
+  if (!events.length) {
+    const row = document.createElement("tr"), cell = document.createElement("td");
+    cell.colSpan = 4; cell.className = "empty"; cell.textContent = "아직 기록된 상태 변화가 없습니다.";
+    row.appendChild(cell); body.appendChild(row); return;
+  }
+  for (const e of events.slice().reverse()) {
+    const row = document.createElement("tr");
+    const fields = [number(e.time, 1) + "초", number(e.raw), e.status || stateNames[e.state] || "확인 필요", (e.source === "simulation" ? "[모의] " : "") + String(e.message || "")];
+    fields.forEach((text, index) => {
+      const cell = document.createElement("td"); cell.textContent = text;
+      if (index === 2) cell.className = "eventstate " + (alarmStates.includes(e.state) ? "event-" + e.state : "");
+      row.appendChild(cell);
+    });
+    body.appendChild(row);
+  }
+}
+function drawChart() {
+  const canvas = $("chart"), ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const width = Math.max(200, canvas.clientWidth), height = canvas.clientHeight || 258;
+  const scale = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale);
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  const pad = {left:48, right:13, top:24, bottom:35};
+  const plotW = width-pad.left-pad.right, plotH = height-pad.top-pad.bottom;
+  const samples = latest ? latest.samples : [], config = latest ? latest.settings : {};
+  const values = samples.filter(s => finite(s.raw)).map(s => s.raw);
+  const limits = [config.warning_level, config.danger_level].filter(finite);
+  const ceiling = Math.min(65535, Math.max(35000, Math.ceil(Math.max(0, ...values, ...limits)*1.12/5000)*5000));
+  const y = raw => pad.top + plotH*(1-raw/ceiling);
+  ctx.font = "11px system-ui,sans-serif"; ctx.lineWidth = 1;
+  ctx.fillStyle = "#53677d"; ctx.fillText("ADC", 0, 12);
+  for (let i=0;i<=4;i++) {
+    const raw = ceiling*i/4, py = y(raw);
+    ctx.strokeStyle="#e1e8f0"; ctx.beginPath(); ctx.moveTo(pad.left,py); ctx.lineTo(width-pad.right,py); ctx.stroke();
+    ctx.fillStyle="#53677d"; ctx.textAlign="right"; ctx.fillText(Math.round(raw).toLocaleString("ko-KR"),pad.left-7,py+4);
+  }
+  ctx.textAlign="left";
+  [[config.warning_level,"#b67b0e"],[config.danger_level,"#c83737"]].forEach(([value,color])=>{
+    if (!finite(value)) return;
+    ctx.strokeStyle=color; ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(pad.left,y(value)); ctx.lineTo(width-pad.right,y(value)); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  if (!samples.length) {
+    ctx.fillStyle="#718399"; ctx.textAlign="center"; ctx.fillText("첫 측정값을 기다리는 중입니다.",pad.left+plotW/2,pad.top+plotH/2); ctx.textAlign="left"; return;
+  }
+  const times = samples.filter(s=>finite(s.time)).map(s=>s.time);
+  const first = times.length ? Math.min(...times) : 0, last = times.length ? Math.max(...times) : first;
+  const span = Math.max(1,last-first), x = time => pad.left+(time-first)/span*plotW;
+  ctx.strokeStyle="#1967c4"; ctx.lineWidth=2; ctx.beginPath();
+  let drawing=false;
+  for (const sample of samples) {
+    if (!finite(sample.raw) || !finite(sample.time)) { drawing=false; continue; }
+    const px=x(sample.time), py=y(sample.raw);
+    if (drawing) ctx.lineTo(px,py); else ctx.moveTo(px,py);
+    drawing=true;
+  }
+  ctx.stroke();
+  for (let i=0;i<samples.length;i++) {
+    const sample=samples[i];
+    if (!finite(sample.raw) || !finite(sample.time)) continue;
+    if (samples.length===1 || i===samples.length-1 || !finite(samples[i-1] && samples[i-1].raw) || !finite(samples[i+1] && samples[i+1].raw)) {
+      ctx.fillStyle="#1967c4"; ctx.beginPath(); ctx.arc(x(sample.time),y(sample.raw),2.6,0,Math.PI*2); ctx.fill();
+    }
+  }
+  ctx.fillStyle="#53677d"; ctx.textAlign="left"; ctx.fillText(number(first,1)+"초",pad.left,height-10);
+  if (last!==first) { ctx.textAlign="right"; ctx.fillText(number(last,1)+"초",width-pad.right,height-10); }
+  ctx.textAlign="left";
+}
+function stopSound() {
+  oscillators.forEach(osc=>{try{osc.stop();}catch(error){}}); oscillators=[];
+}
+async function prepareAudio() {
+  const Audio = window.AudioContext || window.webkitAudioContext;
+  if (!Audio) throw new Error("이 브라우저는 소리를 지원하지 않습니다.");
+  if (!audioContext) audioContext = new Audio();
+  if (audioContext.state === "suspended") await audioContext.resume();
+  if (audioContext.state !== "running") throw new Error("브라우저의 소리 재생이 차단되어 있습니다.");
+}
+function beep(frequency=880) {
+  if (!audioContext || audioContext.state!=="running") return;
+  const osc=audioContext.createOscillator(), gain=audioContext.createGain(), now=audioContext.currentTime;
+  osc.frequency.value=frequency; osc.type="sine";
+  gain.gain.setValueAtTime(0.0001,now); gain.gain.exponentialRampToValueAtTime(0.12,now+0.025); gain.gain.exponentialRampToValueAtTime(0.0001,now+0.24);
+  osc.connect(gain); gain.connect(audioContext.destination); oscillators.push(osc);
+  osc.onended=()=>{osc.disconnect(); gain.disconnect(); oscillators=oscillators.filter(item=>item!==osc);};
+  osc.start(now); osc.stop(now+0.27);
+}
+function maybeSound(force=false) {
+  if (!soundEnabled || !alarmActive()) return;
+  const now=performance.now(); if (!force && now-lastBeep<3000) return;
+  lastBeep=now; beep(latest.current.state==="danger" ? 1175 : latest.current.state==="fault" ? 620 : 880);
+}
+$("soundButton").addEventListener("click",async()=>{
+  if (soundEnabled) {
+    soundEnabled=false; stopSound(); put("soundButton","경보 소리 켜기"); $("soundButton").setAttribute("aria-pressed","false");
+    put("soundStatus","브라우저 경보 소리: 꺼짐 · Pico LED 경보는 계속 작동합니다."); return;
+  }
+  try {
+    await prepareAudio(); soundEnabled=true; put("soundButton","경보 소리 끄기"); $("soundButton").setAttribute("aria-pressed","true");
+    put("soundStatus","브라우저 경보 소리: 켜짐 · 주의·위험·센서 점검 시 약 3초 간격으로 울립니다.");
+    if (alarmActive()) maybeSound(true); else beep(660);
+  } catch(error) { put("soundStatus",error.message); }
+});
+$("soundTest").addEventListener("click",async()=>{
+  try { await prepareAudio(); beep(); put("soundStatus","테스트 소리를 재생했습니다. 자동 경보 소리: "+(soundEnabled?"켜짐":"꺼짐")); }
+  catch(error) { put("soundStatus",error.message); }
+});
+function initNotifications() {
+  const button=$("notifyButton");
+  if (!window.isSecureContext) {
+    button.disabled=true; put("notifyStatus","현재 HTTP 연결에서는 시스템 알림을 사용할 수 없습니다. Pico의 사설 IP 주소는 일반적으로 보안 컨텍스트가 아닙니다. 화면 경보와 브라우저 소리를 이용하세요."); return;
+  }
+  if (!("Notification" in window)) {
+    button.disabled=true; put("notifyStatus","이 브라우저는 시스템 알림 API를 제공하지 않습니다. 화면 경보와 소리를 이용하세요."); return;
+  }
+  notificationEnabled=Notification.permission==="granted";
+  if (notificationEnabled) { put("notifyButton","시스템 알림 허용됨"); button.disabled=true; put("notifyStatus","지원되는 브라우저에서 새 경고를 알립니다. 모바일 지원은 제한될 수 있습니다."); }
+  else if (Notification.permission==="denied") { button.disabled=true; put("notifyStatus","알림이 차단되어 있습니다. 브라우저의 사이트 설정에서 허용한 뒤 새로고침하세요."); }
+  else put("notifyStatus","버튼을 눌러 권한을 요청할 수 있습니다. 모바일에서는 이 방식이 지원되지 않을 수 있습니다.");
+}
+function showNotification() {
+  if (!notificationEnabled || !alarmActive() || !("Notification" in window) || Notification.permission!=="granted") return;
+  try {
+    const c=latest.current;
+    new Notification((latest.device.simulation?"[모의] ":"")+"가스 센서: "+(stateNames[c.state]||c.status),{
+      body:"ADC "+number(c.raw)+" · 웹 화면에서 측정값과 센서 상태를 확인하세요.",tag:"pico-gas-"+boot
+    });
+  } catch(error) {
+    notificationEnabled=false; put("notifyStatus","이 브라우저에서 시스템 알림을 표시하지 못했습니다. 모바일에서는 서비스 워커 방식 등 별도 구현이 필요합니다. 화면 경보와 소리를 확인하세요.");
+  }
+}
+$("notifyButton").addEventListener("click",async()=>{
+  try { await Notification.requestPermission(); initNotifications(); if (notificationEnabled) showNotification(); }
+  catch(error) { put("notifyStatus","권한을 요청하지 못했습니다. 브라우저 지원과 사이트 권한 설정을 확인하세요."); }
+});
+async function update() {
+  let timer;
+  try {
+    const controller=new AbortController();
+    timer=setTimeout(()=>controller.abort(),2500);
+    const response=await fetch("/data",{cache:"no-store",signal:controller.signal});
+    if (!response.ok) throw new Error("HTTP "+response.status);
+    const data=await response.json();
+    if (!data.current || !data.settings || !data.stats || !data.device || !Array.isArray(data.samples) || !Array.isArray(data.events) || !finite(data.current.sample_id)) throw new Error("데이터 형식 오류");
+    const now=performance.now(), session=String(data.boot_id||"");
+    if (session!==boot) { boot=session; lastSample=null; lastAdvance=now; previousAlert=null; eventKey=""; }
+    if (data.current.sample_id!==lastSample) { lastSample=data.current.sample_id; lastAdvance=now; }
+    lastReply=now; reportedAge=finite(data.device.last_sample_age_ms)?Math.max(0,data.device.last_sample_age_ms):Infinity;
+    latest=data; requestFailed=false; fresh=currentFresh(now);
+    latestReason="센서 측정이 제때 갱신되지 않습니다";
+    render(data);
+  } catch(error) {
+    requestFailed=true; latestReason="Pico에서 측정값을 받지 못했습니다";
+    markUnavailable(latestReason);
+  } finally {
+    clearTimeout(timer);
+    setTimeout(update,1000);
+  }
+}
+window.addEventListener("resize",drawChart);
+setInterval(()=>{
+  updateAge();
+  if (fresh && !currentFresh()) markUnavailable("센서 측정 갱신이 지연되었습니다");
+  if (fresh) maybeSound();
+},1000);
+initNotifications(); drawChart(); update();
+</script>
+</body>
+</html>

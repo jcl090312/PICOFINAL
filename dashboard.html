@@ -8,6 +8,7 @@
 <style>
 :root{--ink:#12263e;--muted:#53677d;--line:#dce5ee;--blue:#195fba;--bg:#f1f5fa;--white:#fff}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1100px;margin:auto;padding:28px 22px 36px}h1,h2,p{margin:0}h1{font-size:clamp(24px,4.6vw,34px);line-height:1.35;letter-spacing:-.05em}h2{font-size:18px;letter-spacing:-.025em}.eyebrow{font-size:12px;font-weight:750;letter-spacing:.14em;color:var(--blue);margin-bottom:8px}.muted,.small{color:var(--muted)}.small{font-size:12px}.sub{margin-top:8px}.topline,.panelhead,.actions,.statusline{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.topline{margin-bottom:23px}.badge{display:inline-flex;gap:7px;align-items:center;background:#e4ebf3;border:1px solid #d0dbe8;color:#435871;border-radius:99px;padding:6px 11px;font-size:12px;font-weight:650}.dot{width:7px;height:7px;border-radius:50%;background:currentColor}.connected{background:#e5f5ee;color:#126245;border-color:#bde0cf}.simulation{background:#fff2ce;border:2px solid #be7900;color:#704600;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-weight:700}[hidden]{display:none!important}.banner{border:1px solid #c5d2e1;background:#e9eff7;color:#344b65;border-radius:16px;padding:20px 22px;border-left:6px solid #7891af}.banner.normal{background:#e7f6ed;border-color:#b9dec8;border-left-color:#228456;color:#165d3b}.banner.warning{background:#fff4d7;border-color:#efd390;border-left-color:#bd7b00;color:#765000}.banner.danger{background:#feebeb;border-color:#edb9b9;border-left-color:#c83737;color:#9c2121}.banner.fault{background:#f3eafa;border-color:#dbc5ed;border-left-color:#8850b0;color:#653388}.banner.warmup{background:#eaf2fe;border-color:#c1d6f2;border-left-color:#3f7cc7;color:#235b9e}.state{font-size:24px;font-weight:780;letter-spacing:-.03em}.statecaption{font-size:13px;margin-top:5px}.livetime{font-size:12px;text-align:right}.notice{padding:10px 2px 0;font-size:13px;color:#735217;min-height:25px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}.card,.panel{background:var(--white);border:1px solid var(--line);border-radius:14px}.card{padding:17px 18px}.label{font-size:12px;color:var(--muted);font-weight:650}.value{font-size:clamp(25px,3.2vw,35px);font-weight:760;line-height:1.45;font-variant-numeric:tabular-nums;letter-spacing:-.03em}.unit{font-size:14px;font-weight:500;letter-spacing:0}.card .small{margin-top:3px}.stale .value{color:#7f8e9f}.panel{padding:20px;margin-top:16px}.panelhead{margin-bottom:13px}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.legend span{display:inline-flex;align-items:center;gap:5px}.key{width:18px;border-top:2px solid #1967c4;display:inline-block}.key.warn{border-color:#b67b0e;border-top-style:dashed}.key.danger{border-color:#c83737;border-top-style:dashed}canvas{display:block;width:100%;height:258px}.chartnote{font-size:12px;color:var(--muted);padding-top:7px}.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);margin-top:13px;padding-top:15px;gap:10px}.statvalue{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}.lower{display:grid;grid-template-columns:1.05fr 1fr;gap:16px}.lower .panel{margin-top:16px}button,.download{font:inherit;font-size:13px;font-weight:650;border:1px solid #c6d5e6;border-radius:8px;background:#eef4fb;color:#174e8d;padding:10px 13px;min-height:42px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}button.primary{background:var(--blue);border-color:var(--blue);color:#fff}button:disabled{opacity:.57;cursor:not-allowed}button:focus-visible,a:focus-visible{outline:3px solid #779ed2;outline-offset:3px}.buttons{display:flex;gap:8px;flex-wrap:wrap;margin:11px 0 7px}.setting+.setting{border-top:1px solid var(--line);margin-top:17px;padding-top:15px}.setting strong{font-size:14px}.definition{display:grid;grid-template-columns:110px 1fr;gap:7px 10px;font-size:13px;margin:14px 0}.definition dt{color:var(--muted)}.definition dd{margin:0;font-weight:650}.tablewrap{overflow:auto;max-height:330px}table{border-collapse:collapse;width:100%;font-size:12px;text-align:left}th,td{padding:10px 9px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);white-space:nowrap;background:#f7f9fc;position:sticky;top:0}td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums}td:nth-child(2){font-variant-numeric:tabular-nums}.eventstate{font-weight:700;white-space:nowrap}.event-danger{color:#af2929}.event-warning{color:#956200}.event-fault{color:#784399}.empty{text-align:center;color:var(--muted);padding:23px}footer{margin-top:22px;font-size:12px;color:var(--muted)}footer p+p{margin-top:5px}.footmeta{font-variant-numeric:tabular-nums}.note{background:#f4f7fb;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--muted)}
+.admin-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.admin-test{border:2px solid #bc7400;background:#fff0d3;color:#784600;padding:15px 18px;border-radius:13px;margin-bottom:15px}.admin-test strong{font-size:16px}.admin-test p{margin-top:5px;font-size:13px}.admin-test .testclock{font-variant-numeric:tabular-nums;font-weight:750}.admin-panel{border:2px solid #bed0e8;margin-bottom:18px}.admin-row{display:flex;gap:9px;align-items:end;flex-wrap:wrap;margin:13px 0}.admin-row label{display:grid;gap:5px;font-size:12px;color:var(--muted)}input,select{max-width:100%;min-height:42px;border:1px solid #b5c7dc;border-radius:8px;background:#fff;color:var(--ink);padding:9px 11px;font:inherit;font-size:14px}input:focus-visible,select:focus-visible{outline:3px solid #779ed2;outline-offset:2px}#adminPassword{width:250px}#adminRaw{width:145px}fieldset{border:0;padding:0;margin:0;min-width:0}fieldset legend{font-size:14px;font-weight:750;margin:13px 0 2px}.admin-block+.admin-block{border-top:1px solid var(--line);padding-top:13px;margin-top:16px}.led-green{border-color:#93c8a6;color:#216642}.led-yellow{border-color:#d7b85c;color:#805b00}.led-red{border-color:#dda5a5;color:#a02d2d}.stop-test{width:100%;background:#b32e2e;color:#fff;border-color:#b32e2e;font-size:16px;padding:13px;margin-top:12px}.admin-message{font-size:13px;min-height:23px;margin-top:8px}.admin-message.error{color:#a32626}.admin-message.ok{color:#176642}.admin-session{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.admin-readout{background:#f3f7fc;border-radius:8px;padding:12px;margin:12px 0;font-size:13px}.admin-audit{max-height:220px;margin-top:12px}.admin-audit td:last-child{overflow-wrap:anywhere}
 @media(max-width:720px){main{padding:20px 14px 28px}.topline{gap:14px}.metrics{grid-template-columns:repeat(2,1fr);gap:10px}.card{padding:14px}.lower{grid-template-columns:1fr;gap:0}.panel{padding:16px}.banner{padding:16px}.livetime{text-align:left}.stats{grid-template-columns:repeat(2,1fr);gap:12px}.state{font-size:22px}.definition{grid-template-columns:100px 1fr}canvas{height:240px}}
 </style>
 </head>
@@ -15,8 +16,9 @@
 <main>
   <header class="topline">
     <div><p class="eyebrow">PICO W × MQ-2</p><h1>가스 누출 조기 경보 시스템</h1><p class="muted sub">센서의 변화부터 경고 기록까지, 한눈에 확인하세요.</p></div>
-    <span id="connection" class="badge"><span class="dot"></span><span id="connectionText">연결 확인 중</span></span>
+    <div class="admin-head"><span id="connection" class="badge"><span class="dot"></span><span id="connectionText">연결 확인 중</span></span><button id="adminToggle" type="button" aria-controls="adminPanel" aria-expanded="false">관리자 모드</button></div>
   </header>
+  <section id="adminTestBanner" class="admin-test" aria-live="polite" hidden><div class="statusline"><strong id="adminTestTitle">관리자 시험 상태</strong><span id="adminTestCountdown" class="testclock"></span></div><p id="adminTestDescription"></p><p id="adminLiveValue"></p><p id="adminStopReason"></p></section>
   <div id="simulation" class="simulation" hidden>모의 테스트 모드 · 실제 센서를 측정하지 않습니다. CSV에도 모의 측정으로 기록됩니다.</div>
   <section id="banner" class="banner" aria-live="polite" aria-atomic="true">
     <div class="statusline"><div><div id="status" class="state">센서 연결 확인 중</div><p id="bannerDetail" class="statecaption">측정값을 받으면 현재 상태를 표시합니다.</p></div><p id="liveTime" class="livetime">마지막 수신: 없음</p></div>
@@ -28,6 +30,21 @@
     <section class="card"><p class="label">Pico ADC 핀 전압</p><p class="value"><span id="voltage">—</span> <span class="unit">V</span></p><p class="small">분압 후 GP26 입력 기준</p></section>
     <section class="card"><p class="label">최근 유효 측정 개수</p><p class="value"><span id="count">—</span><span id="capacity" class="unit"></span></p><p id="total" class="small">부팅 후 총 측정: —</p></section>
   </div>
+  <section id="adminPanel" class="panel admin-panel" aria-labelledby="adminHeading" hidden>
+    <div class="panelhead"><div><h2 id="adminHeading">관리자 시험 모드</h2><p class="small sub">가스를 사용하지 않고 LED와 경보 판정을 확인합니다. 같은 네트워크의 실습용 관리자 기능입니다.</p></div></div>
+    <form id="adminLoginForm" autocomplete="off"><div class="admin-row"><label for="adminPassword">관리자 비밀번호<input id="adminPassword" name="admin-password" type="password" autocomplete="off" maxlength="128" required></label><button id="adminLoginButton" type="submit" class="primary">로그인</button></div></form>
+    <div id="adminSession" class="admin-session" hidden><p id="adminSessionText" class="small">로그인 확인 중</p><button id="adminLogout" type="button">로그아웃</button></div>
+    <p id="adminMessage" class="admin-message" aria-live="polite">로그인하면 시험 버튼을 사용할 수 있습니다.</p>
+    <div id="adminReadout" class="admin-readout" hidden><p id="adminCurrentTest"></p><p id="adminDeviceInfo" class="small"></p></div>
+    <fieldset id="adminControls" disabled>
+      <legend>시험 실행</legend>
+      <div class="admin-block"><strong>LED만 점등</strong><p class="small">센서 판정은 그대로 유지합니다. 단색은 5초, 전체는 3초, 순차 점등은 9초입니다.</p><div class="buttons"><button id="testLedGreen" type="button" class="led-green">초록 5초</button><button id="testLedYellow" type="button" class="led-yellow">노랑 5초</button><button id="testLedRed" type="button" class="led-red">빨강 5초</button><button id="testLedAll" type="button">전체 3초</button><button id="testLedSequence" type="button">순차 점등 9초</button></div></div>
+      <div class="admin-block"><strong>모의 센서로 판정 시험</strong><p class="small">시험용 값으로 화면·LED·경고 기록을 확인합니다. 연속 판정 기준을 거치므로 상태 전환에 몇 초가 걸릴 수 있습니다.</p><div class="admin-row"><label for="adminDuration">모의 시험 시간<select id="adminDuration"><option value="10">10초</option><option value="30" selected>30초</option><option value="60">60초</option><option value="120">120초</option></select></label></div><div class="buttons"><button id="testSensorNormal" type="button">모의 정상</button><button id="testSensorWarning" type="button">모의 주의</button><button id="testSensorDanger" type="button">모의 위험</button><button id="testSensorFault" type="button">모의 센서 오류</button></div><div class="admin-row"><label for="adminRaw">직접 입력할 ADC 값<input id="adminRaw" type="number" inputmode="numeric" min="0" max="65535" step="1" value="20000"></label><button id="testSensorRaw" type="button">입력값 시험</button></div><button id="testScenario" type="button">자동 시나리오 60초 · 정상 → 주의 → 위험 → 정상</button></div>
+    </fieldset>
+    <button id="adminStop" type="button" class="stop-test" disabled>즉시 시험 종료</button>
+    <p id="adminLeaseNote" class="note">실제 센서의 주의·위험 경보가 발생하면 시험을 중단합니다. 화면을 닫거나 관리자 연결이 끊기면 마지막 확인 후 약 12초 안에 시험이 자동 종료됩니다. 시험 종료 후 원래 측정 모드로 돌아가며, 기본 설정이 모의 측정이면 그 모드를 유지합니다.</p>
+    <div class="admin-block"><div class="panelhead"><h2>관리자 시험 이력</h2><div class="buttons"><button id="adminTestCsv" type="button" disabled>최근 가상 시험 CSV</button><button id="adminAuditCsv" type="button" disabled>관리자 시험 이력 CSV</button></div></div><p class="small">최근 가상 시험은 종료 후에도 다음 가상 시험을 시작하기 전까지 내려받을 수 있습니다. 장치를 재시작하면 지워집니다.</p><div class="tablewrap admin-audit"><table><thead><tr><th scope="col">부팅 후 시간</th><th scope="col">동작</th><th scope="col">내용</th></tr></thead><tbody id="adminAudit"><tr><td colspan="3" class="empty">로그인하면 최근 시험 이력을 표시합니다.</td></tr></tbody></table></div></div>
+  </section>
   <section class="panel">
     <div class="panelhead"><h2>최근 측정값</h2><div class="legend"><span><i class="key"></i>ADC</span><span><i class="key warn"></i><span id="warningLegend">주의 기준</span></span><span><i class="key danger"></i><span id="dangerLegend">위험 기준</span></span></div></div>
     <canvas id="chart" role="img" aria-label="최근 ADC 측정값과 주의·위험 기준을 표시하는 선 그래프"></canvas>
@@ -106,6 +123,7 @@ function renderStatus(data) {
     c.state === "warmup" ? "초기 측정값은 불안정할 수 있습니다. 예열 중에도 경보를 판정합니다." : "첫 측정값을 기다리고 있습니다.";
   if (finite(c.warmup_remaining) && c.warmup_remaining > 0) text += " 예열 안내 " + number(c.warmup_remaining) + "초 남음.";
   if (c.pending) text += " " + c.pending;
+  if (data.device.simulation || c.source === "simulation") text = "[모의 측정] " + text;
   put("bannerDetail", text);
   put("rawNote", "범위 0–65,535 · " + (c.source === "simulation" ? "모의 측정" : "센서 측정"));
   if (c.state !== previousAlert) {
@@ -116,13 +134,18 @@ function renderStatus(data) {
 }
 function render(data) {
   const c = data.current, s = data.stats, config = data.settings;
-  $("simulation").hidden = !(data.device.simulation || c.source === "simulation");
+  const virtualTest = Boolean(data.admin && data.admin.active && data.admin.kind !== "led");
+  const baseSimulation = typeof data.device.base_simulation === "boolean" ? data.device.base_simulation : Boolean(data.device.simulation && !virtualTest);
+  $("simulation").hidden = !baseSimulation;
+  put("simulation", "기본 모의 측정 모드 · 실제 센서를 측정하지 않습니다. 관리자 시험이 끝나도 기본 모의 측정을 유지합니다.");
+  if (data.admin) acceptTestBanner(data.admin, data.live, data.device);
+  else if (!adminToken) { testBannerSnapshot = null; $("adminTestBanner").hidden = true; }
   put("raw", number(c.raw));
   put("change", finite(c.change) ? (c.change > 0 ? "+" : "") + number(c.change) : "—");
   put("rate", "변화 속도: " + (finite(c.rise_per_second) && c.rise_per_second > 0 ? "+" : "") + number(c.rise_per_second, 1) + " /초");
   put("voltage", finite(c.voltage) ? c.voltage.toFixed(3) : "—");
   put("count", number(s.count)); put("capacity", " / " + number(config.history_size));
-  put("total", "부팅 후 총 측정: " + number(s.total_count) + "회 (실패 포함)");
+  put("total", (virtualTest ? "이번 모의 시험 측정: " : "부팅 후 총 측정: ") + number(s.total_count) + "회 (실패 포함)");
   put("average", number(s.average, 1)); put("maximum", number(s.maximum)); put("minimum", number(s.minimum));
   put("percent", finite(c.percent) ? number(c.percent, 1) + "%" : "—");
   let health = c.health_message || "";
@@ -282,6 +305,277 @@ $("notifyButton").addEventListener("click",async()=>{
   try { await Notification.requestPermission(); initNotifications(); if (notificationEnabled) showNotification(); }
   catch(error) { put("notifyStatus","권한을 요청하지 못했습니다. 브라우저 지원과 사이트 권한 설정을 확인하세요."); }
 });
+// 관리자 인증 정보는 이 페이지의 메모리에만 유지합니다.
+let adminToken = null, adminExpiresAt = 0, adminGeneration = 0, adminActionVersion = 0;
+let adminStatus = null, adminLastReply = 0, adminPollError = false, adminPollTimer = null, adminPollPromise = null;
+let adminLoginBusy = false, adminCommandBusy = false, adminStopBusy = false, adminDownloadBusy = false;
+let adminCommandPromise = null, adminRetryUntil = 0, adminPageHidden = false, testBannerSnapshot = null;
+const adminPaths = ["/admin/login", "/admin/status", "/admin/test", "/admin/stop", "/admin/logout", "/admin/test-history.csv", "/admin/audit.csv"];
+const stopReasons = {
+  completed:"설정한 시험 시간이 끝났습니다.", duration:"설정한 시험 시간이 끝났습니다.",
+  duration_elapsed:"설정한 시험 시간이 끝났습니다.", timeout:"설정한 시험 시간이 끝났습니다.",
+  lease_expired:"관리자 연결이 끊겨 시험이 자동 종료되었습니다.", heartbeat_timeout:"관리자 연결이 끊겨 시험이 자동 종료되었습니다.",
+  live_alarm:"실제 센서 경보가 확인되어 시험을 중단했습니다.", real_alarm:"실제 센서 경보가 확인되어 시험을 중단했습니다.",
+  logout:"로그아웃하여 시험을 종료했습니다.", manual:"종료 버튼으로 시험을 종료했습니다.", user_stop:"종료 버튼으로 시험을 종료했습니다.",
+  session_expired:"관리자 세션이 만료되어 시험을 종료했습니다."
+};
+const phaseNames = {normal:"정상", warning:"주의", danger:"위험", fault:"센서 오류", raw:"직접 입력값", recovery:"정상 복귀", green:"초록 LED", yellow:"노랑 LED", red:"빨강 LED", all:"전체 LED", sequence:"순차 점등"};
+function phaseText(phase) { return phaseNames[phase] || String(phase || ""); }
+function reasonText(reason) { return reason ? (stopReasons[reason] || String(reason)) : ""; }
+function adminMessage(message, type="") { put("adminMessage", message); $("adminMessage").className = "admin-message " + type; }
+function countdown(seconds, receivedAt) {
+  return finite(seconds) ? Math.max(0, Math.ceil(seconds - (performance.now()-receivedAt)/1000)) : null;
+}
+function acceptTestBanner(test, live, device) {
+  if (!test || typeof test.active !== "boolean") return;
+  testBannerSnapshot = {test:test, live:live || {}, device:device || {}, at:performance.now()};
+  updateTestBanner();
+}
+function updateTestBanner() {
+  if (!testBannerSnapshot) return;
+  const info=testBannerSnapshot, test=info.test, live=info.live, device=info.device;
+  $("adminTestBanner").hidden = !(test.active || test.stop_reason);
+  if ($("adminTestBanner").hidden) return;
+  const stale = performance.now()-info.at > 4500;
+  const baseSimulation = device.base_simulation === true || live.source === "simulation";
+  const remaining = countdown(test.remaining_seconds, info.at);
+  put("adminTestTitle", test.active ? "관리자 시험 중 · " + String(test.label || "시험 실행") : "최근 관리자 시험 종료");
+  put("adminTestCountdown", stale ? "마지막 확인값 · 현재 상태 확인 필요" : test.active ? (remaining === null ? "시간 확인 중" : remaining > 0 ? "남은 약 " + remaining + "초" : "시간 종료 · 서버 확인 중") : "서버에서 종료 확인");
+  let description = test.kind === "led" ? "LED만 시험 · 센서값은 " + (baseSimulation ? "기본 모의 측정입니다." : "실제 측정입니다.") :
+    test.active ? "모의 센서 시험 · 현재 측정값·그래프·측정 CSV는 시험용 값입니다. " + (baseSimulation ? "기본 측정도 모의 모드입니다." : "실제 센서는 별도로 계속 감시합니다.") :
+    "시험 전의 측정 모드로 돌아갑니다. " + (baseSimulation ? "기본 모의 측정 모드를 유지합니다." : "실제 센서의 판정을 확인하세요.");
+  if (test.active && test.phase) description += " 현재 단계: " + phaseText(test.phase) + ".";
+  put("adminTestDescription", description);
+  const sourceLabel = baseSimulation ? "기본 모의 값" : "실제 센서";
+  put("adminLiveValue", (stale ? "마지막 확인 · " : "") + sourceLabel + " ADC " + number(live.raw) + " · " + String(live.status || stateNames[live.state] || "상태 확인 중") + (live.pending ? " · " + String(live.pending) : ""));
+  put("adminStopReason", test.stop_reason ? "종료 사유: " + reasonText(test.stop_reason) : "실제 센서의 주의·위험 경보가 우선하며, 시험 때문에 경보 기준을 바꾸지 않습니다.");
+}
+function clearAudit(message) {
+  const body=$("adminAudit"), row=document.createElement("tr"), cell=document.createElement("td");
+  body.textContent=""; cell.colSpan=3; cell.className="empty"; cell.textContent=message; row.appendChild(cell); body.appendChild(row);
+}
+function renderAudit(events) {
+  if (!Array.isArray(events) || !events.length) { clearAudit("아직 관리자 시험 이력이 없습니다."); return; }
+  const body=$("adminAudit"); body.textContent="";
+  const names={login:"로그인", logout:"로그아웃", start:"시험 시작", stop:"시험 종료", test_start:"시험 시작", test_stop:"시험 종료", test_started:"시험 시작", test_stopped:"시험 종료", session_expired:"세션 만료", login_failed:"로그인 실패", login_unavailable:"로그인 불가"};
+  for (const event of events.slice(-30).reverse()) {
+    const row=document.createElement("tr");
+    [number(finite(event.time_ms) ? event.time_ms/1000 : null,1)+"초", names[event.action] || String(event.action || "—"), String(event.message || "")].forEach(text=>{
+      const cell=document.createElement("td"); cell.textContent=text; row.appendChild(cell);
+    });
+    body.appendChild(row);
+  }
+}
+function renderAdminControls() {
+  const loggedIn=Boolean(adminToken), retry=Math.max(0,Math.ceil((adminRetryUntil-performance.now())/1000));
+  $("adminLoginForm").hidden=loggedIn; $("adminSession").hidden=!loggedIn; $("adminReadout").hidden=!loggedIn;
+  $("adminPassword").disabled=adminLoginBusy; $("adminLoginButton").disabled=adminLoginBusy || retry>0;
+  put("adminLoginButton", adminLoginBusy ? "로그인 확인 중…" : retry>0 ? retry+"초 후 다시 로그인" : "로그인");
+  $("adminControls").disabled=!loggedIn || !adminStatus || adminPollError || adminCommandBusy || adminStopBusy || !adminStatus.test.enabled;
+  $("adminStop").disabled=!loggedIn || adminStopBusy;
+  put("adminStop", adminStopBusy ? "시험 종료 확인 중…" : "즉시 시험 종료");
+  $("adminLogout").disabled=!loggedIn;
+  $("adminTestCsv").disabled=!loggedIn || adminDownloadBusy; $("adminAuditCsv").disabled=!loggedIn || adminDownloadBusy;
+  if (!loggedIn) return;
+  const seconds=Math.max(0,Math.ceil((adminExpiresAt-performance.now())/1000));
+  put("adminSessionText", "관리자 로그인 · 남은 시간 " + Math.floor(seconds/60) + "분 " + seconds%60 + "초" + (adminPollError ? " · 연결 재확인 중" : ""));
+  if (adminStatus) {
+    const test=adminStatus.test, left=countdown(test.remaining_seconds,adminLastReply);
+    const stalePrefix = performance.now()-adminLastReply>4500 ? "마지막 확인값 · " : "";
+    put("adminCurrentTest", stalePrefix + (test.active ? "진행 중: "+String(test.label || "시험")+(test.phase ? " · "+phaseText(test.phase) : "")+" · "+(left>0 ? left+"초 남음" : "종료 여부 확인 중") : "현재 실행 중인 관리자 시험이 없습니다."+(test.stop_reason ? " "+reasonText(test.stop_reason) : "")));
+  }
+}
+function clearAdminSession(message) {
+  adminToken=null; adminExpiresAt=0; adminGeneration++; adminActionVersion++;
+  clearTimeout(adminPollTimer); adminPollTimer=null; adminPollPromise=null;
+  adminStatus=null; adminCommandPromise=null; adminCommandBusy=false; adminStopBusy=false; adminDownloadBusy=false; adminPollError=false;
+  $("adminPassword").value=""; clearAudit("로그인하면 최근 시험 이력을 표시합니다."); renderAdminControls();
+  if (message) adminMessage(message);
+}
+function acceptAdminStatus(data) {
+  if (!data || data.authenticated !== true || !data.test || typeof data.test.active !== "boolean") throw new Error("관리자 상태 응답을 확인하지 못했습니다.");
+  adminStatus=data; adminLastReply=performance.now(); adminPollError=false;
+  if (finite(data.expires_in)) adminExpiresAt=Math.min(adminExpiresAt,performance.now()+Math.max(0,data.expires_in)*1000);
+  const device=data.device || {}, parts=[];
+  if (device.ip) parts.push("장치 IP "+String(device.ip));
+  if (finite(device.uptime_ms)) parts.push("가동 "+number(device.uptime_ms/1000,1)+"초");
+  if (finite(device.free_heap)) parts.push("여유 메모리 "+number(device.free_heap/1024,1)+" KB");
+  put("adminDeviceInfo",parts.join(" · "));
+  if (data.limits && finite(data.limits.lease_seconds)) put("adminLeaseNote", "실제 센서의 주의·위험 경보가 발생하면 시험을 중단합니다. 화면을 닫거나 관리자 연결이 끊기면 마지막 확인 후 약 "+number(data.limits.lease_seconds)+"초 안에 자동 종료됩니다. 원래 모드로 돌아가며 기본 설정이 모의 측정이면 그 모드를 유지합니다.");
+  renderAudit(data.audit); acceptTestBanner(data.test,data.live,data.device); renderAdminControls();
+}
+async function adminRequest(path, method="GET", body=null, token=adminToken, asBlob=false) {
+  if (!adminPaths.includes(path)) throw new Error("허용되지 않은 관리자 요청입니다.");
+  const controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),4000);
+  const headers={}; if (token) headers.Authorization="Bearer "+token;
+  const options={method:method,headers:headers,cache:"no-store",credentials:"omit",mode:"same-origin",redirect:"error",signal:controller.signal};
+  if (method==="POST") { headers["Content-Type"]="application/json"; options.body=JSON.stringify(body || {}); }
+  try {
+    const response=await fetch(path,options);
+    if (!response.ok) {
+      let detail={}; try { detail=await response.json(); } catch(error) {}
+      const error=new Error(typeof detail.error === "string" ? detail.error : "관리자 요청에 응답하지 못했습니다. ("+response.status+")");
+      error.status=response.status; error.retryAfter=finite(detail.retry_after) ? Math.max(0,detail.retry_after) : 0; throw error;
+    }
+    return asBlob ? await response.blob() : await response.json();
+  } finally { clearTimeout(timeout); }
+}
+function adminErrorText(error) {
+  if (error.name==="AbortError" || !error.status && error instanceof TypeError) return "장치의 응답을 확인하지 못했습니다. 통신을 확인하고 현재 시험 상태를 다시 확인하세요.";
+  return String(error.message || "요청 결과를 확인하지 못했습니다.") + (error.retryAfter ? " "+error.retryAfter+"초 뒤 다시 시도하세요." : "");
+}
+function handleAdminError(error, token) {
+  if (error.status===401 && token && token===adminToken) { clearAdminSession("관리자 세션이 종료되었습니다. 시험 상태는 위 배너에서 확인하고 필요하면 다시 로그인하세요."); return; }
+  adminMessage(adminErrorText(error),"error");
+}
+function scheduleAdminPoll(delay=3000) {
+  clearTimeout(adminPollTimer);
+  if (adminToken && !adminPageHidden) adminPollTimer=setTimeout(()=>{adminPollTimer=null;pollAdmin();},delay);
+}
+function pollAdmin() {
+  if (!adminToken || adminPageHidden) return Promise.resolve(null);
+  if (performance.now()>=adminExpiresAt) { clearAdminSession("관리자 세션 시간이 끝났습니다. 필요하면 다시 로그인하세요. 시험 종료 여부는 위 배너에서 확인하세요."); return Promise.resolve(null); }
+  if (adminPollPromise) return adminPollPromise;
+  clearTimeout(adminPollTimer); adminPollTimer=null;
+  const token=adminToken, generation=adminGeneration; let delay=3000;
+  const promise=(async()=>{
+    try {
+      const result=await adminRequest("/admin/status","GET",null,token);
+      if (token!==adminToken || generation!==adminGeneration) return null;
+      const recovered=adminPollError; acceptAdminStatus(result);
+      if (recovered) adminMessage("관리자 연결이 복구되어 현재 시험 상태를 다시 확인했습니다.");
+      return result;
+    } catch(error) {
+      if (token===adminToken && generation===adminGeneration) {
+        adminPollError=true; handleAdminError(error,token); renderAdminControls();
+        if (error.retryAfter) delay=Math.max(3000,error.retryAfter*1000);
+      }
+      return null;
+    } finally {
+      if (adminPollPromise===promise) adminPollPromise=null;
+      if (token===adminToken && generation===adminGeneration) scheduleAdminPoll(delay);
+    }
+  })();
+  adminPollPromise=promise; return promise;
+}
+$("adminToggle").addEventListener("click",()=>{
+  const open=$("adminPanel").hidden; $("adminPanel").hidden=!open; $("adminToggle").setAttribute("aria-expanded",String(open));
+  put("adminToggle",open ? "관리자 패널 접기" : "관리자 모드");
+  if (open) { $("adminPanel").scrollIntoView({behavior:"smooth",block:"start"}); if (!adminToken) $("adminPassword").focus(); }
+});
+$("adminLoginForm").addEventListener("submit",async event=>{
+  event.preventDefault();
+  if (adminLoginBusy || adminToken || performance.now()<adminRetryUntil) return;
+  let password=$("adminPassword").value; $("adminPassword").value="";
+  if (!password) { adminMessage("관리자 비밀번호를 입력하세요.","error"); return; }
+  adminLoginBusy=true; const generation=adminGeneration; renderAdminControls(); adminMessage("관리자 로그인을 확인하고 있습니다.");
+  try {
+    const request=adminRequest("/admin/login","POST",{password:password},null); password="";
+    const result=await request;
+    if (generation!==adminGeneration || adminPageHidden) return;
+    if (!result || typeof result.token!=="string" || !result.token || !finite(result.expires_in) || result.expires_in<=0) throw new Error("로그인 응답을 확인하지 못했습니다.");
+    adminToken=result.token; adminExpiresAt=performance.now()+result.expires_in*1000; adminGeneration++; adminStatus=null;
+    adminMessage("로그인되었습니다. 장치의 시험 가능 상태를 확인합니다.","ok"); renderAdminControls(); await pollAdmin();
+  } catch(error) {
+    if (generation===adminGeneration && !adminPageHidden) {
+      if (error.status===429) adminRetryUntil=performance.now()+(error.retryAfter || 3)*1000;
+      adminMessage(adminErrorText(error),"error");
+    }
+  } finally { password=""; adminLoginBusy=false; renderAdminControls(); }
+});
+function selectedDuration() {
+  const seconds=Number($("adminDuration").value), limit=adminStatus && adminStatus.limits && finite(adminStatus.limits.max_seconds) ? adminStatus.limits.max_seconds : 120;
+  if (![10,30,60,120].includes(seconds) || seconds>limit) throw new Error("모의 시험 시간은 장치가 허용하는 최대 "+limit+"초 이내에서 선택하세요.");
+  return seconds;
+}
+async function runAdminTest(spec) {
+  if (!adminToken || $("adminControls").disabled) return;
+  const token=adminToken, generation=adminGeneration, version=++adminActionVersion;
+  adminCommandBusy=true; renderAdminControls(); adminMessage("시험 시작 요청을 확인하고 있습니다.");
+  let request;
+  try {
+    request=adminRequest("/admin/test","POST",spec,token); adminCommandPromise=request;
+    const result=await request;
+    if (token!==adminToken || generation!==adminGeneration || version!==adminActionVersion) return;
+    acceptAdminStatus(result);
+    adminMessage(result.test.active ? "시험이 시작되었습니다. 위 배너에서 시험값과 실제 센서 상태를 구분해 확인하세요." : "시험이 실행 중이지 않습니다. "+reasonText(result.test.stop_reason),result.test.active ? "ok" : "");
+  } catch(error) {
+    if (token===adminToken && generation===adminGeneration && version===adminActionVersion) handleAdminError(error,token);
+  } finally {
+    if (adminCommandPromise===request) adminCommandPromise=null;
+    if (token===adminToken && generation===adminGeneration) { adminCommandBusy=false; renderAdminControls(); scheduleAdminPoll(0); }
+  }
+}
+function sensorTest(mode) {
+  try {
+    const spec={kind:"sensor",mode:mode,duration:selectedDuration()};
+    if (mode==="raw") {
+      const text=$("adminRaw").value;
+      if (!/^\d+$/.test(text) || !Number.isInteger(Number(text)) || Number(text)<0 || Number(text)>65535) throw new Error("ADC 값은 0부터 65,535 사이의 정수로 입력하세요.");
+      spec.raw=Number(text);
+    }
+    return runAdminTest(spec);
+  } catch(error) { adminMessage(error.message,"error"); return Promise.resolve(); }
+}
+[["testLedGreen","green",5],["testLedYellow","yellow",5],["testLedRed","red",5],["testLedAll","all",3],["testLedSequence","sequence",9]].forEach(([id,mode,duration])=>$(id).addEventListener("click",()=>runAdminTest({kind:"led",mode:mode,duration:duration})));
+[["testSensorNormal","normal"],["testSensorWarning","warning"],["testSensorDanger","danger"],["testSensorFault","fault"],["testSensorRaw","raw"]].forEach(([id,mode])=>$(id).addEventListener("click",()=>sensorTest(mode)));
+$("testScenario").addEventListener("click",()=>runAdminTest({kind:"sequence",duration:60}));
+$("adminStop").addEventListener("click",async()=>{
+  if (!adminToken || adminStopBusy) return;
+  const token=adminToken, generation=adminGeneration, pending=adminCommandPromise; adminActionVersion++;
+  adminStopBusy=true; renderAdminControls(); adminMessage("시험 종료 요청을 확인하고 있습니다.");
+  let result=null, failure=null;
+  try { result=await adminRequest("/admin/stop","POST",{},token); } catch(error) { failure=error; }
+  if (pending) {
+    try { await pending; } catch(error) {}
+    // 늦게 완료된 시작 요청이 종료 요청을 덮지 않도록 한 번 더 종료합니다.
+    if (token===adminToken && generation===adminGeneration) {
+      try { result=await adminRequest("/admin/stop","POST",{},token); failure=null; } catch(error) { failure=error; }
+    }
+  }
+  if (token!==adminToken || generation!==adminGeneration) return;
+  try {
+    if (failure) throw failure;
+    acceptAdminStatus(result);
+    adminMessage(result.test.active ? "장치가 아직 시험 중으로 응답했습니다. 현재 상태를 확인하고 다시 종료하세요." : "장치에서 시험 종료를 확인했습니다. 원래 측정 모드로 돌아갑니다.",result.test.active ? "error" : "ok");
+  } catch(error) { handleAdminError(error,token); }
+  finally { if (token===adminToken && generation===adminGeneration) { adminStopBusy=false; renderAdminControls(); scheduleAdminPoll(0); } }
+});
+$("adminLogout").addEventListener("click",async()=>{
+  if (!adminToken) return;
+  const token=adminToken; clearAdminSession("로그아웃과 시험 종료를 요청하고 있습니다.");
+  try {
+    const result=await adminRequest("/admin/logout","POST",{},token);
+    if (adminToken) return;
+    if (!result || result.authenticated!==false || !result.test) throw new Error("로그아웃 결과를 확인하지 못했습니다.");
+    acceptTestBanner(result.test,{},latest && latest.device);
+    adminMessage(result.test.active ? "로그아웃했지만 시험 종료는 아직 확인되지 않았습니다. 위 배너를 확인하세요." : "로그아웃했습니다. 장치에서 시험 종료를 확인했습니다.",result.test.active ? "error" : "ok");
+  } catch(error) { if (!adminToken) adminMessage("로그아웃 응답을 확인하지 못했습니다. 관리자 연결 확인은 중단했으며, 시험 종료 여부는 위 배너에서 확인하세요.","error"); }
+});
+async function downloadAdminCsv(path, filename) {
+  if (!adminToken || adminDownloadBusy) return;
+  const token=adminToken, generation=adminGeneration; adminDownloadBusy=true; renderAdminControls();
+  try {
+    const blob=await adminRequest(path,"GET",null,token,true);
+    if (token!==adminToken || generation!==adminGeneration) return;
+    const url=URL.createObjectURL(blob), link=document.createElement("a"); link.href=url; link.download=filename; link.hidden=true;
+    document.body.appendChild(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+    adminMessage("CSV 다운로드를 요청했습니다.","ok");
+  } catch(error) { if (token===adminToken && generation===adminGeneration) handleAdminError(error,token); }
+  finally { if (token===adminToken && generation===adminGeneration) { adminDownloadBusy=false; renderAdminControls(); } }
+}
+$("adminTestCsv").addEventListener("click",()=>downloadAdminCsv("/admin/test-history.csv","gas_admin_test_history.csv"));
+$("adminAuditCsv").addEventListener("click",()=>downloadAdminCsv("/admin/audit.csv","gas_admin_audit.csv"));
+window.addEventListener("pagehide",()=>{
+  adminPageHidden=true;
+  const token=adminToken; clearAdminSession();
+  if (token) {
+    // 전송 성공을 가정하지 않습니다. 서버의 연결 확인 제한도 시험 종료를 담당합니다.
+    fetch("/admin/stop",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:"{}",keepalive:true,credentials:"omit",mode:"same-origin",redirect:"error"}).catch(()=>{});
+  }
+});
+window.addEventListener("pageshow",()=>{adminPageHidden=false;});
+
 async function update() {
   let timer;
   try {
@@ -308,11 +602,13 @@ async function update() {
 }
 window.addEventListener("resize",drawChart);
 setInterval(()=>{
-  updateAge();
+  updateAge(); updateTestBanner();
+  if (adminToken && performance.now()>=adminExpiresAt) clearAdminSession("관리자 세션 시간이 끝났습니다. 필요하면 다시 로그인하세요. 시험 종료 여부는 위 배너에서 확인하세요.");
+  renderAdminControls();
   if (fresh && !currentFresh()) markUnavailable("센서 측정 갱신이 지연되었습니다");
   if (fresh) maybeSound();
 },1000);
-initNotifications(); drawChart(); update();
+renderAdminControls(); initNotifications(); drawChart(); update();
 </script>
 </body>
 </html>

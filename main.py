@@ -1,6 +1,7 @@
 """Pico W / Pico 2 W + MQ-2 교육용 가스 누출 경보기.
 
-필수 파일: main.py, config.py, alarm_logic.py, dashboard.html, wifi_config.py
+필수 파일: main.py, config.py, alarm_logic.py, admin_control.py,
+dashboard.html, wifi_config.py, admin_config.py(관리자 비밀번호 설정)
 추가 pip 패키지 없이 보드용 MicroPython에서 실행합니다.
 """
 
@@ -13,6 +14,12 @@ from machine import ADC, Pin
 
 import config as C
 from alarm_logic import AlarmModel, validate_settings
+from admin_control import AdminController, AdminError
+
+try:
+    import admin_config as ADMIN_SETTINGS
+except ImportError:
+    ADMIN_SETTINGS = None
 
 try:
     import network
@@ -24,7 +31,8 @@ try:
 except ImportError:
     WIFI_SSID, WIFI_PASSWORD = "", ""
 
-FIRMWARE_VERSION = "2.0.0"
+FIRMWARE_VERSION = "2.1.0-admin"
+ADMIN_BODY_LIMIT = 512
 
 
 class Uptime:
@@ -98,7 +106,7 @@ class Outputs:
         if pin is not None:
             pin.value(int(bool(on) == bool(active_high)))
 
-    def apply(self, state, now_ms, wifi_connected=False):
+    def apply(self, state, now_ms, wifi_connected=False, allow_buzzer=True):
         green = state == "normal"
         yellow = state == "warning"
         red = False
@@ -117,7 +125,15 @@ class Outputs:
         self.set_pin(self.green, green, C.LED_ACTIVE_HIGH)
         self.set_pin(self.yellow, yellow, C.LED_ACTIVE_HIGH)
         self.set_pin(self.red, red, C.LED_ACTIVE_HIGH)
-        self.set_pin(self.buzzer, buzz, C.BUZZER_ACTIVE_HIGH)
+        self.set_pin(self.buzzer, buzz and allow_buzzer, C.BUZZER_ACTIVE_HIGH)
+        if self.onboard is not None:
+            self.onboard.value(1 if wifi_connected else int((now_ms % 2000) < 100))
+
+    def apply_test(self, values, now_ms, wifi_connected=False):
+        """개별 LED 확인. 장치 부저는 관리자 시험 중 울리지 않습니다."""
+        for pin, on in zip((self.green, self.yellow, self.red), values):
+            self.set_pin(pin, on, C.LED_ACTIVE_HIGH)
+        self.set_pin(self.buzzer, False, C.BUZZER_ACTIVE_HIGH)
         if self.onboard is not None:
             self.onboard.value(1 if wifi_connected else int((now_ms % 2000) < 100))
 
@@ -179,6 +195,11 @@ class System:
         validate_hardware_settings()
         self.clock = Uptime()
         self.model = AlarmModel(C, boot_id=boot_identifier())
+        self.admin = AdminController(ADMIN_SETTINGS)
+        self.test_model = None
+        self.test_model_id = None
+        self.last_test_model = None
+        self.last_test_sample_ms = None
         self.outputs = Outputs()
         self.adc = None  # Lazy creation: ADC errors must not stop Wi-Fi and fault LEDs.
         self.last_sample_ms = None
@@ -214,6 +235,8 @@ class System:
             now = self.clock.ms()
             self.model.update(raw, now, source=source, error=error)
             self.last_sample_ms = now
+            self.update_admin(now)
+            self.sample_test(now)
             if C.CONSOLE_LOG:
                 current = self.model.current
                 print("[%s] t=%ss ADC=%s 상태=%s 신호=%s" % (
@@ -229,12 +252,60 @@ class System:
     async def output_loop(self):
         while True:
             now = self.clock.ms()
-            state = self.model.current["state"]
-            if self.last_sample_ms is not None and now - self.last_sample_ms > C.STALE_SAMPLE_MS:
-                # A stopped sample stream cannot continue to display normal green.
-                state = "danger" if self.model.current["alarm_level"] == "danger" else "fault"
-            self.outputs.apply(state, now, self.wifi_connected)
+            self.apply_outputs(now)
             await asyncio.sleep_ms(50)
+
+    def samples_stale(self, now_ms):
+        return self.last_sample_ms is not None and now_ms - self.last_sample_ms > C.STALE_SAMPLE_MS
+
+    def update_admin(self, now_ms):
+        """Called independently of browser polling; expiry never relies on the UI."""
+        self.admin.tick(now_ms, real_alarm=self.model.current["alarm_level"],
+                        real_mode=not C.SIMULATION, sample_stale=self.samples_stale(now_ms))
+        job = self.admin.test
+        virtual = job is not None and job["kind"] in ("sensor", "sequence")
+        if self.test_model is not None and (not virtual or job["id"] != self.test_model_id):
+            self.last_test_model = self.test_model
+            self.test_model = None
+            self.test_model_id = None
+            self.last_test_sample_ms = None
+        if virtual and self.test_model is None:
+            # Bound memory: one live ring and one current/latest test ring only.
+            self.last_test_model = None
+            settings = {name: getattr(C, name) for name in dir(C) if name.isupper()}
+            settings["SIMULATION"] = True
+            self.test_model_id = job["id"]
+            self.test_model = AlarmModel(settings, self.model.boot_id + "-test-" + str(job["id"]))
+            self.last_test_sample_ms = None
+
+    def sample_test(self, now_ms):
+        if self.test_model is None:
+            return
+        # HTTP commands may start a model immediately, but cannot count as a
+        # burst of consecutive samples when the physical sampling task resumes.
+        if self.last_test_sample_ms is not None and now_ms - self.last_test_sample_ms < C.SAMPLE_INTERVAL_MS:
+            return
+        raw = self.admin.sample_value(now_ms)
+        error = "관리자 가상 읽기 오류" if raw is None else None
+        self.test_model.update(raw, now_ms, source="simulation", error=error)
+        self.last_test_sample_ms = now_ms
+
+    def apply_outputs(self, now_ms):
+        self.update_admin(now_ms)
+        stale = self.samples_stale(now_ms)
+        if stale:
+            state = "danger" if self.model.current["alarm_level"] == "danger" else "fault"
+            self.outputs.apply(state, now_ms, self.wifi_connected)
+            return
+        self.sample_test(now_ms)
+        led_values = self.admin.led_values(now_ms)
+        if led_values is not None:
+            self.outputs.apply_test(led_values, now_ms, self.wifi_connected)
+        elif self.test_model is not None:
+            state = self.test_model.current["state"]
+            self.outputs.apply(state, now_ms, self.wifi_connected, allow_buzzer=False)
+        else:
+            self.outputs.apply(self.model.current["state"], now_ms, self.wifi_connected)
 
     async def wifi_loop(self):
         if network is None or not hasattr(network, "WLAN"):
@@ -290,19 +361,37 @@ class System:
             await asyncio.sleep(C.WIFI_RETRY_SECONDS)
 
     def snapshot(self):
-        data = self.model.snapshot()
         now = self.clock.ms()
-        data["boot_id"] = self.model.boot_id
-        data["device"] = {
+        self.update_admin(now)
+        display_model = self.test_model if self.test_model is not None else self.model
+        data = display_model.snapshot()
+        data["boot_id"] = display_model.boot_id
+        data["device"] = self.device_info(now)
+        data["admin"] = self.admin.public_status(now)
+        data["live"] = dict(self.model.current)
+        data["live"]["last_sample_age_ms"] = None if self.last_sample_ms is None else now - self.last_sample_ms
+        return data
+
+    def device_info(self, now):
+        sample_time = self.last_test_sample_ms if self.test_model is not None else self.last_sample_ms
+        return {
             "wifi_connected": self.wifi_connected,
             "wifi_state": self.wifi_state,
             "ip": self.ip,
             "uptime_ms": now,
-            "last_sample_age_ms": None if self.last_sample_ms is None else now - self.last_sample_ms,
+            "last_sample_age_ms": None if sample_time is None else now - sample_time,
             "stale_sample_ms": C.STALE_SAMPLE_MS,
-            "simulation": C.SIMULATION,
+            "simulation": bool(C.SIMULATION or self.test_model is not None),
+            "base_simulation": C.SIMULATION,
+            "free_heap_bytes": gc.mem_free() if hasattr(gc, "mem_free") else None,
             "firmware_version": FIRMWARE_VERSION,
         }
+
+    def admin_status(self, token, now, touch=True):
+        self.update_admin(now)
+        data = self.admin.private_status(token, now, touch=touch)
+        data["device"] = self.device_info(now)
+        data["live"] = dict(self.model.current)
         return data
 
     async def read_headers(self, reader):
@@ -314,14 +403,75 @@ class System:
             received += chunk
             if len(received) >= C.HTTP_HEADER_LIMIT and b"\r\n\r\n" not in received:
                 raise ValueError("HTTP request headers too large")
-        return received.split(b"\r\n", 1)[0]
+        raw_headers, remainder = received.split(b"\r\n\r\n", 1)
+        lines = raw_headers.split(b"\r\n")
+        headers = {}
+        for raw_line in lines[1:]:
+            if b":" not in raw_line or raw_line[:1] in (b" ", b"\t"):
+                raise ValueError("Malformed HTTP header")
+            name, value = raw_line.split(b":", 1)
+            name = name.decode("ascii").lower()
+            if not name or any(ch not in "abcdefghijklmnopqrstuvwxyz0123456789-" for ch in name):
+                raise ValueError("Malformed HTTP header name")
+            value = value.strip().decode("ascii")
+            if name in headers:
+                # Do not accept ambiguous auth, host, origin or length headers.
+                raise ValueError("Duplicate HTTP header")
+            headers[name] = value
+        if "transfer-encoding" in headers:
+            raise ValueError("Transfer-Encoding is not supported")
+        if "content-length" in headers:
+            length = headers["content-length"]
+            if not length or any(ch < "0" or ch > "9" for ch in length):
+                raise ValueError("Invalid Content-Length")
+        return lines[0], headers, remainder
+
+    async def read_json_body(self, reader, headers, remainder):
+        if headers.get("content-type", "").split(";", 1)[0].strip().lower() != "application/json":
+            raise AdminError(415, "관리자 요청은 JSON 형식이어야 합니다.")
+        if "content-length" not in headers:
+            raise AdminError(411, "요청 길이가 필요합니다.")
+        length = int(headers["content-length"])
+        if length < 2 or length > ADMIN_BODY_LIMIT:
+            raise AdminError(413, "요청 본문이 너무 크거나 비어 있습니다.")
+        if len(remainder) > length:
+            raise AdminError(400, "요청 길이가 맞지 않습니다.")
+        body = remainder
+        while len(body) < length:
+            chunk = await reader.read(length - len(body))
+            if not chunk:
+                raise AdminError(400, "요청 본문을 끝까지 받지 못했습니다.")
+            body += chunk
+        try:
+            value = json.loads(body.decode("utf-8"))
+        except (ValueError, UnicodeError):
+            raise AdminError(400, "JSON 형식을 확인하세요.")
+        if not isinstance(value, dict):
+            raise AdminError(400, "JSON 객체가 필요합니다.")
+        return value
+
+    @staticmethod
+    def admin_token(headers):
+        authorization = headers.get("authorization", "")
+        parts = authorization.split()
+        return parts[1] if len(parts) == 2 and parts[0].lower() == "bearer" else ""
+
+    @staticmethod
+    def check_origin(headers):
+        origin = headers.get("origin")
+        if origin is not None:
+            host = headers.get("host", "")
+            if not host or origin != "http://" + host:
+                raise AdminError(403, "피코 대시보드에서 직접 요청하세요.")
+        if headers.get("sec-fetch-site") == "cross-site":
+            raise AdminError(403, "다른 사이트의 관리자 요청은 허용하지 않습니다.")
 
     async def write_bytes(self, writer, body):
         for position in range(0, len(body), 512):
             writer.write(body[position:position + 512])
             await asyncio.wait_for_ms(writer.drain(), C.HTTP_WRITE_TIMEOUT_MS)
 
-    async def send_headers(self, writer, status, content_type, length, filename=None):
+    async def send_headers(self, writer, status, content_type, length, filename=None, allow="GET"):
         header = (
             "HTTP/1.1 " + status + "\r\nContent-Type: " + content_type +
             "\r\nContent-Length: " + str(length) +
@@ -331,15 +481,90 @@ class System:
         if filename:
             header += 'Content-Disposition: attachment; filename="' + filename + '"\r\n'
         if status.startswith("405 "):
-            header += "Allow: GET\r\n"
+            header += "Allow: " + allow + "\r\n"
+        if status.startswith("401 "):
+            header += 'WWW-Authenticate: Bearer realm="Pico admin"\r\n'
         await self.write_bytes(writer, (header + "\r\n").encode("utf-8"))
 
     async def respond(self, writer, body, content_type="text/plain; charset=utf-8",
-                      status="200 OK", filename=None):
+                      status="200 OK", filename=None, allow="GET"):
         if isinstance(body, str):
             body = body.encode("utf-8")
-        await self.send_headers(writer, status, content_type, len(body), filename)
+        await self.send_headers(writer, status, content_type, len(body), filename, allow)
         await self.write_bytes(writer, body)
+
+    async def respond_json(self, writer, data, status_code=200, allow="GET"):
+        labels = {200: "OK", 400: "Bad Request", 401: "Unauthorized", 403: "Forbidden",
+                  404: "Not Found", 405: "Method Not Allowed", 409: "Conflict",
+                  411: "Length Required", 413: "Content Too Large", 415: "Unsupported Media Type",
+                  429: "Too Many Requests", 503: "Service Unavailable"}
+        status = str(status_code) + " " + labels.get(status_code, "Error")
+        await self.respond(writer, json.dumps(data), "application/json; charset=utf-8", status, allow=allow)
+
+    async def handle_admin(self, method, path, headers, remainder, reader, writer):
+        get_paths = (b"/admin/status", b"/admin/test-history.csv", b"/admin/audit.csv")
+        post_paths = (b"/admin/login", b"/admin/test", b"/admin/stop", b"/admin/logout")
+        try:
+            if path not in get_paths + post_paths:
+                raise AdminError(404, "관리자 경로를 찾을 수 없습니다.")
+            expected = b"GET" if path in get_paths else b"POST"
+            if method != expected:
+                await self.respond_json(writer, {"error": "요청 방식을 확인하세요."}, 405,
+                                        allow=expected.decode())
+                return
+            self.check_origin(headers)
+            now = self.clock.ms()
+            self.update_admin(now)
+            token = self.admin_token(headers)
+            if path != b"/admin/login":
+                self.admin.require(token, now)
+            if method == b"POST":
+                body = await asyncio.wait_for_ms(
+                    self.read_json_body(reader, headers, remainder), C.HTTP_HEADER_TIMEOUT_MS)
+                now = self.clock.ms()
+                self.update_admin(now)
+                if path == b"/admin/login":
+                    result = self.admin.login(body.get("password"), now)
+                elif path == b"/admin/test":
+                    # Require usable sampling and preserve a genuine live alarm.
+                    if self.last_sample_ms is None or self.samples_stale(now):
+                        raise AdminError(409, "센서 측정이 갱신된 뒤 시험을 시작하세요.")
+                    if not C.SIMULATION and self.model.current["alarm_level"] in ("warning", "danger"):
+                        raise AdminError(409, "실제 센서 경보가 우선입니다. 현재 주의·위험 상태를 확인하세요.")
+                    self.admin.start_test(token, body, now, C)
+                    self.apply_outputs(now)
+                    result = self.admin_status(token, now)
+                elif path == b"/admin/stop":
+                    self.admin.stop_test(token, now)
+                    self.apply_outputs(now)
+                    result = self.admin_status(token, now)
+                else:
+                    result = self.admin.logout(token, now)
+                if path in (b"/admin/login", b"/admin/logout"):
+                    self.apply_outputs(now)
+                await self.respond_json(writer, result)
+            elif path == b"/admin/status":
+                await self.respond_json(writer, self.admin_status(token, now, touch=True))
+            elif path == b"/admin/test-history.csv":
+                model = self.test_model if self.test_model is not None else self.last_test_model
+                if model is None:
+                    raise AdminError(404, "아직 보관된 가상 시험 기록이 없습니다.")
+                data = model.snapshot()
+                await self.respond(writer, make_csv(data, "history"), "text/csv; charset=utf-8",
+                                   filename="mq2_test_" + model.boot_id + ".csv")
+            else:
+                data = self.admin.private_status(token, now)
+                rows = [["기록ID", "부팅후시간(초)", "작업", "내용", "시험ID"]]
+                for event in data["audit"]:
+                    rows.append([event["id"], event["time_ms"] / 1000, event["action"],
+                                 event["message"], event["test_id"]])
+                content = "\ufeff" + "\r\n".join(",".join(csv_cell(x) for x in row) for row in rows) + "\r\n"
+                await self.respond(writer, content, "text/csv; charset=utf-8", filename="mq2_admin_audit.csv")
+        except AdminError as exc:
+            payload = {"error": exc.message}
+            if getattr(exc, "retry_after", None) is not None:
+                payload["retry_after"] = exc.retry_after
+            await self.respond_json(writer, payload, exc.status)
 
     async def serve_dashboard(self, writer):
         try:
@@ -368,7 +593,7 @@ class System:
             self.active_clients += 1
             counted = True
             try:
-                line = await asyncio.wait_for_ms(self.read_headers(reader), C.HTTP_HEADER_TIMEOUT_MS)
+                line, headers, remainder = await asyncio.wait_for_ms(self.read_headers(reader), C.HTTP_HEADER_TIMEOUT_MS)
                 parts = line.split()
                 if len(parts) != 3 or not parts[2].startswith(b"HTTP/"):
                     raise ValueError("Invalid HTTP request")
@@ -376,7 +601,9 @@ class System:
             except ValueError:
                 await self.respond(writer, "잘못되었거나 너무 큰 요청입니다.", status="400 Bad Request")
                 return
-            if method != b"GET":
+            if path.startswith(b"/admin/"):
+                await self.handle_admin(method, path, headers, remainder, reader, writer)
+            elif method != b"GET":
                 await self.respond(writer, "GET만 지원합니다.", status="405 Method Not Allowed")
             elif path in (b"/", b"/index.html"):
                 await self.serve_dashboard(writer)
@@ -385,7 +612,7 @@ class System:
             elif path in (b"/history.csv", b"/events.csv"):
                 kind = "events" if path == b"/events.csv" else "history"
                 data = self.snapshot()
-                name = "mq2_" + kind + "_" + self.model.boot_id + ".csv"
+                name = "mq2_" + kind + "_" + data["boot_id"] + ".csv"
                 await self.respond(writer, make_csv(data, kind), "text/csv; charset=utf-8", filename=name)
             elif path == b"/favicon.ico":
                 await self.respond(writer, b"", content_type="image/x-icon")
@@ -431,6 +658,7 @@ class System:
         print("가스 누출 경보기 v" + FIRMWARE_VERSION)
         print("입력 모드:", "가상 시험 — 실제 가스를 측정하지 않습니다." if C.SIMULATION else "실제 ADC")
         print("ADC 기준은 가스 농도(ppm)가 아닙니다. 예열 안내 종료도 교정 완료가 아닙니다.")
+        print("관리자 모드:", "대시보드의 관리자 모드 버튼을 사용하세요." if self.admin.enabled else "개인 admin_config.py 설정이 필요합니다.")
         tasks = [asyncio.create_task(fn()) for fn in (
             self.sensor_loop, self.output_loop, self.wifi_loop,
             self.server_loop, self.maintenance_loop)]

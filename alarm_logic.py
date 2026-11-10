@@ -1,10 +1,3 @@
-"""Gas-alarm state machine, shared by MicroPython and desktop unit tests.
-
-ADC values are 0..65535 readings, NOT ppm or a measured gas percentage.
-This module performs no GPIO, networking, filesystem, or clock operations.
-"""
-
-
 _STATUS = {
     "starting": "측정 준비",
     "warmup": "예열 중",

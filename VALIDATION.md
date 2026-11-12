@@ -1,11 +1,43 @@
-# 개선판 소프트웨어 검증 결과 - AI
+# 최신 검증 개요 — v2.2.0 확장판
+
+검증일: **2026-11-12** · Pico 사용자 실물 하드웨어 시험: **미실시**
+
+| 범위 | 검증 결과 | 검증 의미 |
+|---|---|---|
+| PC Python 자동 검사 | **179 / 179개 통과** | 기존 MQ-2 판정·LED·관리자 인증·HTTP + 새 SHT40·HUSKYLENS·MP3 파서와 연동 정책 |
+| Node.js 웹 화면 DOM 모의 | **12개 그룹 통과** | 온습도·사람·스피커 표시, 관리자 가상 사람/실제 스피커 요청 검증 |
+| 공식 MicroPython v1.27.0 Unix 포트 | 관리자 인증 **6개 항목 통과** | 개인 설정 누락/로그인 실패/정상 인증 등 MicroPython 오류 처리 |
+| 공식 MicroPython v1.27.0 Unix 포트 | 센서/MP3 프로토콜, 비동기 드라이버 **모의 경로 통과** | 실제 MicroPython의 `bytearray`·예외/파서 동작까지 검사. 모의 I2C/UART 버스 사용 |
+| PC 가상 웹 서버 | `/`, `/data`, CSV, 로그인·관리자 상태·시험·중지 HTTP 정상 응답 | Python 가상 서버 통합으로 Pico 실제 Wi-Fi 검증은 아님 |
+| 물리 MQ-2/LED/SHT40/HUSKYLENS/MP3·스피커 | **미실시** | 실제 전압·소리·사람 인식률·지연·안전 검증은 학교에서 수행 필요 |
+
+### 이번에 찾아 수정한 MicroPython 호환성 오류
+
+`peripheral_sensors.py`의 HUSKYLENS 수신 버퍼 파서는 CPython에서 지원하는 `del bytearray[0]`와 `del bytearray[:n]`을 사용하던 초기 초안이었습니다. **MicroPython Unix 포트에서는 해당 삭제 연산이 지원되지 않아** 실제 파서 시험에서 오류가 발생했습니다. 두 위치를 `buffer = buffer[1:]` 및 `buffer = buffer[n:]` 형태로 수정하고 실제 MicroPython Unix에서 **패킷 분할 수신·센서 드라이버·MP3 명령 모의 시험을 재통과**했습니다. 기존 v2.1 `AdminError` 생성자 문제의 수정도 유지했습니다.
+
+### 검증하지 못한 사항
+
+실제 Pico W의 I2C 버스와 UART 핀, 공급전압, UART 레벨 변환, 물리 스피커에서의 재생, HUSKYLENS 실제 사물 인식·ID, 무선 접속 장기 안정성, 실제 가스 누출 감지·측정 정확성은 검사하지 못했습니다. **모의 응답/명령 전송 성공은 물리 장치 동작의 증거가 아닙니다.** 공인 가스 경보기 대체 용도로 평가하지 않았습니다.
+
+### 실행 명령
+
+```bash
+python -m unittest discover -s tests -p 'test_*.py' -q
+node tests/test_dashboard.js
+```
+
+아래부터는 v2.1.1 시점의 **이전 검증 기록**입니다.
+
+---
+
+# 개선판 소프트웨어 검증 결과
 
 검증일: **2026-11-10**  
-펌웨어 코드 버전: **2.1.0-admin**
+펌웨어 코드 버전: **2.1.1-admin**
 
 ## 검증 결론
 
-**PC에서 실행한 Python 자동 테스트 104개가 모두 통과했습니다.** 웹 화면의 JavaScript 구문과 DOM 모의 동작, 관리자 기능을 포함한 PC 가상 대시보드의 실제 로컬 HTTP 응답도 확인했습니다. 2026-11-09 버전의 기존 48개 시험도 포함됩니다.
+**PC에서 실행한 Python 자동 테스트 110개가 모두 통과했습니다.** 기존 104개에 부분 전송·연결 제한에 대한 6개를 추가했습니다. 관리자 로그인 오류를 확인하기 위해 공식 MicroPython v1.27.0의 Unix 실행 환경에서도 수정 전후 HTTP 응답을 비교했고, 관리자 호환성 점검 6개가 통과했습니다. 웹 화면의 JavaScript 구문과 DOM 모의 동작, 관리자 기능을 포함한 PC 가상 대시보드의 실제 로컬 HTTP 응답은 앞선 v2.1.0 검증을 유지합니다. 이번 수정에서 HTML은 바뀌지 않았습니다.
 
 이는 실제 Pico에서 실행해 확인한 결과가 아닙니다. 실제 MQ-2, LED, 부저, 보드 Wi-Fi, 모바일 화면, 장시간 안정성, 가스 검출 성능과 교정은 아직 시험하지 않았습니다.
 
@@ -17,11 +49,33 @@
 | 장치 제어·HTTP 처리 | `tests/test_runtime.py`, Pico API 모의 객체 사용 | 22개 통과 |
 | 관리자 인증·시험 제어 | `tests/test_admin_control.py`, CPython | 32개 통과 |
 | 관리자 HTTP·출력 통합 | `tests/test_admin_runtime.py`, Pico API 모의 객체 | 24개 통과 |
-| 전체 Python 자동 시험 | `python -m unittest discover -s tests` | 합계 104개 통과 |
+| 부분 전송·연결 제한 | `tests/test_login_transport.py`, MicroPython Stream 동작 모형 | 6개 통과 |
+| 전체 Python 자동 시험 | `python -m unittest discover -s tests` | 합계 110개 통과 |
+| 실제 MicroPython 언어 호환성 | `tests/micropython_admin_smoke.py`, v1.27.0 Unix 포트 | 6개 점검 통과 |
 | Python 구문 | 모든 프로젝트 Python 파일 AST 구문 확인 | 통과 |
 | 웹 JavaScript 구문 | HTML의 스크립트를 Node.js로 구문 확인 | 통과 |
 | 웹 화면 갱신 로직 | `node tests/test_dashboard.js`, DOM·Canvas·알림·오디오 모의 객체 | 통과 |
 | PC 가상 대시보드 HTTP | 실제 `tools/preview.py` 서버에 로컬 HTTP 요청 | HTML·JSON·CSV 응답 확인 |
+
+### v2.1.1 관리자 로그인 오류 수정
+
+사용자는 관리자 로그인 때 통신 오류를 보고했습니다. 확인된 결함은 사용자 정의 `AdminError`에서 `Exception.__init__(self, message)`를 직접 호출한 것입니다. MicroPython에는 이 메서드가 없어 `AttributeError`가 발생합니다. 공식 문서가 안내하는 `super().__init__(message)` 방식으로 변경했습니다.
+
+근거: [MicroPython v1.27.0 — Exception.__init__ method does not exist](https://docs.micropython.org/en/v1.27.0/genrst/builtin_types.html#exception-init-method-does-not-exist).
+
+공식 v1.27.0 소스를 Unix 실행 파일로 빌드하고, 실제 MicroPython의 `asyncio`와 HTTP 처리를 사용했습니다. GPIO·ADC·Wi-Fi는 가상 객체로 제공했고 개인 설정 대신 독립적인 시험용 인증 정보를 사용했습니다.
+
+| 요청 | 수정 전 | 수정 후 |
+|---|---|---|
+| 올바른 시험용 비밀번호 | HTTP 200 | HTTP 200 |
+| 잘못된 비밀번호 | `AttributeError`, HTTP 응답 없음 | HTTP 401, 오류 JSON |
+| 잘못된 관리자 토큰 | `AttributeError`, HTTP 응답 없음 | HTTP 401, 오류 JSON |
+| 관리자 설정이 없는 상태의 로그인 | 오류 생성 단계에서 `AttributeError` | HTTP 503, 설정 안내 JSON |
+| 이후 `/data` 조회 | HTTP 200, 측정 계속됨 | HTTP 200, 측정 계속됨 |
+
+이는 **오류 안내 경로의 호환성 결함을 재현하고 수정한 결과**입니다. 원본도 올바른 시험용 비밀번호에서는 로그인했으므로, 사용자 사진의 모든 증상이나 실제 센서 수신 중단을 이 한 가지 결함으로 단정할 수 없습니다. 실제 Pico의 개인 설정·보드 로그 및 수정 후 동작 확인은 남아 있습니다.
+
+추가 전송 시험은 부분 읽기·쓰기, 헤더 종료 경계, UTF-8 본문 분할, 느린 POST, 연결 슬롯 포화 후 회복을 확인했습니다. 두 연결이 이미 사용 중이면 세 번째 연결이 응답 없이 닫힐 수 있다는 기존 제한도 확인했습니다. 이 수정에서는 연결 수와 HTML 요청 주기를 바꾸지 않았습니다.
 
 ### 관리자 기능에서 추가로 확인한 내용
 

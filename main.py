@@ -17,6 +17,13 @@ from alarm_logic import AlarmModel, validate_settings
 from admin_control import AdminController, AdminError
 
 try:
+    import peripheral_config as P
+    from peripherals import PeripheralManager
+except ImportError:
+    P = None
+    PeripheralManager = None
+
+try:
     import admin_config as ADMIN_SETTINGS
 except ImportError:
     ADMIN_SETTINGS = None
@@ -31,7 +38,7 @@ try:
 except ImportError:
     WIFI_SSID, WIFI_PASSWORD = "", ""
 
-FIRMWARE_VERSION = "2.1.0-admin"
+FIRMWARE_VERSION = "2.2.0-integrated"
 ADMIN_BODY_LIMIT = 512
 
 
@@ -208,6 +215,21 @@ class System:
         self.wifi_state = "not_configured"
         self.active_clients = 0
         self.server = None
+        self.peripherals = None
+        if PeripheralManager is not None and P is not None:
+            pins = (C.ADC_PIN, C.GREEN_LED_PIN, C.YELLOW_LED_PIN, C.RED_LED_PIN, C.BUZZER_PIN)
+            self.peripherals = PeripheralManager(P, self.clock, self.audio_context, reserved_pins=pins)
+
+    def audio_context(self):
+        now = self.clock.ms()
+        self.update_admin(now)
+        return {
+            "real_mode": not C.SIMULATION,
+            "alarm_level": self.model.current["alarm_level"],
+            "gas_stale": self.last_sample_ms is None or self.samples_stale(now),
+            "test": self.admin.test,
+            "test_alarm": self.test_model.current["alarm_level"] if self.test_model is not None else None,
+        }
 
     async def read_sensor(self):
         if self.adc is None:
@@ -370,6 +392,8 @@ class System:
         data["admin"] = self.admin.public_status(now)
         data["live"] = dict(self.model.current)
         data["live"]["last_sample_age_ms"] = None if self.last_sample_ms is None else now - self.last_sample_ms
+        if self.peripherals is not None:
+            data["peripherals"] = self.peripherals.snapshot(now)
         return data
 
     def device_info(self, now):
@@ -392,6 +416,8 @@ class System:
         data = self.admin.private_status(token, now, touch=touch)
         data["device"] = self.device_info(now)
         data["live"] = dict(self.model.current)
+        if self.peripherals is not None:
+            data["peripherals"] = self.peripherals.snapshot(now)
         return data
 
     async def read_headers(self, reader):
@@ -531,6 +557,9 @@ class System:
                         raise AdminError(409, "센서 측정이 갱신된 뒤 시험을 시작하세요.")
                     if not C.SIMULATION and self.model.current["alarm_level"] in ("warning", "danger"):
                         raise AdminError(409, "실제 센서 경보가 우선입니다. 현재 주의·위험 상태를 확인하세요.")
+                    if body.get("kind") == "audio" or body.get("audio") is True:
+                        if self.peripherals is None or not self.peripherals.audio["enabled"]:
+                            raise AdminError(503, "peripheral_config.py와 MP3_ENABLED 설정을 확인하세요.")
                     self.admin.start_test(token, body, now, C)
                     self.apply_outputs(now)
                     result = self.admin_status(token, now)
@@ -659,9 +688,15 @@ class System:
         print("입력 모드:", "가상 시험 — 실제 가스를 측정하지 않습니다." if C.SIMULATION else "실제 ADC")
         print("ADC 기준은 가스 농도(ppm)가 아닙니다. 예열 안내 종료도 교정 완료가 아닙니다.")
         print("관리자 모드:", "대시보드의 관리자 모드 버튼을 사용하세요." if self.admin.enabled else "개인 admin_config.py 설정이 필요합니다.")
-        tasks = [asyncio.create_task(fn()) for fn in (
+        jobs = [
             self.sensor_loop, self.output_loop, self.wifi_loop,
-            self.server_loop, self.maintenance_loop)]
+            self.server_loop, self.maintenance_loop]
+        if self.peripherals is not None:
+            jobs.extend((self.peripherals.environment_loop, self.peripherals.person_loop, self.peripherals.audio_loop))
+            print("추가 장치: SHT40 / HUSKYLENS / Grove MP3 V4 · peripheral_config.py 설정")
+        else:
+            print("추가 장치 파일 없음: 기본 가스 감시를 실행합니다.")
+        tasks = [asyncio.create_task(fn()) for fn in jobs]
         try:
             await asyncio.gather(*tasks)
         except Exception as exc:
@@ -670,6 +705,9 @@ class System:
                 task.cancel()
             if self.server is not None:
                 self.server.close()
+            await asyncio.sleep_ms(0)
+            if self.peripherals is not None:
+                await self.peripherals.shutdown()
             while True:
                 self.outputs.apply("fault", self.clock.ms(), False)
                 await asyncio.sleep_ms(50)
@@ -678,6 +716,8 @@ class System:
                 task.cancel()
             if self.server is not None:
                 self.server.close()
+            if self.peripherals is not None:
+                await self.peripherals.shutdown()
             self.outputs.off()
 
 

@@ -105,7 +105,12 @@ async def run_preview(port, password=None):
     firmware.C.SIMULATION = True
     firmware.C.CONSOLE_LOG = False
     firmware.C.HTTP_PORT = port
-    firmware.FIRMWARE_VERSION = "2.1.0-PC-preview"
+    firmware.FIRMWARE_VERSION = "2.2.0-PC-preview"
+    # Desktop preview must never initialise real I2C/UART devices.
+    if firmware.P is not None:
+        firmware.P.SHT40_ENABLED = False
+        firmware.P.HUSKY_ENABLED = False
+        firmware.P.MP3_ENABLED = False
     system = firmware.System()
     if password is not None:
         system.admin = firmware.AdminController(temporary_admin_settings(password))

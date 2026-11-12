@@ -331,7 +331,7 @@ class AdminControlTests(unittest.TestCase):
         self.start(admin, token, mode="danger")
         public = admin.public_status(0)
         self.assertEqual(set(public), {"enabled", "active", "id", "kind", "mode", "label",
-                                       "phase", "remaining_seconds", "stop_reason"})
+                                       "phase", "remaining_seconds", "stop_reason", "person", "audio"})
         private = admin.private_status(token, 1)
         document = json.dumps({"public": public, "private": private}, ensure_ascii=False)
         for secret in (PASSWORD, token, config()["PASSWORD_SALT_HEX"], config()["PASSWORD_HASH_HEX"]):
@@ -362,6 +362,52 @@ class AdminControlTests(unittest.TestCase):
         admin = controller()
         for now in (True, -1, None, 1.2, "1"):
             self.assert_error(400, admin.login, PASSWORD, now)
+
+
+    def test_optional_virtual_person_and_audio_are_strict_boolean(self):
+        admin, token = self.authenticated()
+        for options in ({}, {"person": False, "audio": False},
+                        {"person": True}, {"person": True, "audio": True}):
+            self.start(admin, token, mode="danger", **options)
+            self.assertEqual(admin.test["person"], options.get("person", False))
+            self.assertEqual(admin.test["audio"], options.get("audio", False))
+            state = admin.public_status(0)
+            self.assertEqual(state["person"], options.get("person", False))
+            self.assertEqual(state["audio"], options.get("audio", False))
+        prior = dict(admin.test)
+        for bad in ({"person": "true"}, {"person": 1}, {"person": None},
+                    {"audio": "true"}, {"audio": 1}, {"audio": None}):
+            self.assert_error(400, self.start, admin, token, mode="danger", **bad)
+            self.assertEqual(admin.test, prior)
+
+    def test_audio_trial_is_five_seconds_no_sensor_override(self):
+        admin, token = self.authenticated()
+        status = admin.start_test(token, {"kind": "audio", "mode": "test", "duration": 5}, 100, ALARM)
+        self.assertTrue(status["test"]["active"])
+        self.assertEqual(status["test"]["kind"], "audio")
+        self.assertIsNone(admin.sample_value(100))
+        self.assertIsNone(admin.led_values(100))
+        self.assertTrue(admin.test["audio"])
+        self.assertIsNone(admin.test["person"])
+        for spec in ({"kind":"audio", "mode":"test", "duration":6},
+                     {"kind":"audio", "mode":"test", "duration":5, "person":True},
+                     {"kind":"audio", "mode":"test", "duration":5, "audio":True},
+                     {"kind":"audio", "mode":"stop", "duration":5}):
+            self.assert_error(400, admin.start_test, token, spec, 101, ALARM)
+            self.assertIsNotNone(admin.test)
+        self.assertTrue(admin.public_status(5099)["active"])
+        self.assertFalse(admin.public_status(5100)["active"])
+
+    def test_sequence_virtual_person_audio_and_real_alarm_cancel(self):
+        admin, token = self.authenticated()
+        response = admin.start_test(token, {"kind":"sequence", "duration":60,
+                                            "person":True,"audio":True}, 0, ALARM)
+        self.assertEqual(response["test"]["kind"], "sequence")
+        self.assertTrue(response["test"]["person"])
+        self.assertTrue(response["test"]["audio"])
+        self.assertTrue(admin.tick(3000, real_alarm="normal", real_mode=True))
+        self.assertFalse(admin.tick(4000, real_alarm="warning", real_mode=True))
+        self.assertIsNone(admin.test)
 
 
 if __name__ == "__main__":

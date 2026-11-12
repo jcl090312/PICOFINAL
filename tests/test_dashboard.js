@@ -23,9 +23,10 @@ const elems={};
 for(const match of html.matchAll(/<([a-z]+)\b[^>]*\bid="([^"]+)"[^>]*>/g)){
  const el=new Element(match[1]);el.hidden=/\shidden(?:\s|>)/.test(match[0]);el.disabled=/\sdisabled(?:\s|>)/.test(match[0]);el.value=(match[0].match(/\bvalue="([^"]*)"/)||[])[1]||'';elems[match[2]]=el;
 }
-elems.adminDuration.value='30';
+elems.adminDuration.value='30';elems.adminPerson.value='false';elems.adminPhysicalAudio.checked=false;
 let now=100,failed=false,notifications=[],beeps=0;
 let current={boot_id:'bootA',current:{raw:35000,voltage:1.762,percent:53.4,change:5000,rise_per_second:5000,state:'danger',status:'위험',alarm_level:'danger',time:12,sample_id:12,source:'simulation',warmup_remaining:0,health:'ok',health_message:'입력 확인 중',rapid_rise:false,pending:''},samples:[{id:1,time:1,raw:10000},{id:2,time:2,raw:null},{id:3,time:3,raw:35000}],events:[{id:1,boot_id:'bootA',time:12,raw:35000,state:'danger',status:'위험',type:'state_change',message:'<img src=x onerror=alert(1)>',source:'simulation'}],stats:{average:22500,maximum:35000,minimum:10000,count:2,total_count:12},settings:{warning_level:18000,danger_level:30000,hysteresis:2000,enter_count:3,exit_count:5,warmup_seconds:0,history_size:60,event_size:30,sample_interval_ms:1000,rapid_rise_per_second:8000,rapid_rise_count:2},device:{wifi_connected:true,ip:'192.168.1.20',uptime_ms:12000,last_sample_age_ms:10,simulation:true,firmware_version:'2.0'}};
+current.peripherals={environment:{enabled:true,status:'ok',temperature_c:23.5,humidity_percent:45.7,age_ms:50,error:null},person:{enabled:true,status:'ok',present:false,count:0,configured_ids:[1],detected_ids:[],hold_remaining_ms:0,age_ms:100,error:null},audio:{enabled:true,status:'ready',auto_enabled:true,mode:'idle',eligible:false,condition:'사람 감지 대기',track:null,volume:8,acknowledged:true,error:null}};
 class NotificationMock{static permission='granted';constructor(title,data){notifications.push({title,data});}static async requestPermission(){return 'granted';}}
 class AudioMock{constructor(){this.state='running';this.currentTime=0;this.destination={};}createOscillator(){return{frequency:{value:0},connect(){},disconnect(){},start(){beeps++;},stop(){}};}createGain(){return{gain:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){},disconnect(){}};}}
 const intervals=[],timeouts=[],windowEvents={},requests=[],blobs=[],revoked=[];
@@ -35,7 +36,7 @@ let admin={token:null,expiresAt:0,test:inactive(),hasVirtual:false,audit:[{id:1,
 let loginFailure=null,statusFailure=null,startFailure=null,holdStatus=false,releaseStatus=null,holdStart=false,releaseStart=null;
 const response=(status,data)=>({ok:status>=200&&status<300,status,json:async()=>structuredClone(data),blob:async()=>new Blob(['source,raw\nsimulation,30000\n'],{type:'text/csv'})});
 function privateState(){return{authenticated:true,expires_in:Math.max(0,Math.ceil((admin.expiresAt-now)/1000)),test:{...admin.test},audit:admin.audit,limits:{max_seconds:120,lease_seconds:12},device:{ip:'192.168.1.20',uptime_ms:now,free_heap:100000,base_simulation:false},live:{...admin.live}};}
-function start(spec){admin.test={enabled:true,active:true,id:'test-'+requests.length,kind:spec.kind,mode:spec.mode||null,label:'테스트 '+spec.kind,phase:spec.mode||'normal',remaining_seconds:spec.duration,stop_reason:''};if(spec.kind!=='led')admin.hasVirtual=true;return response(200,privateState());}
+function start(spec){admin.test={enabled:true,active:true,id:'test-'+requests.length,kind:spec.kind,mode:spec.mode||null,label:'테스트 '+spec.kind,phase:spec.mode||'normal',remaining_seconds:spec.duration,stop_reason:''};if(spec.kind==='sensor'||spec.kind==='sequence')admin.hasVirtual=true;return response(200,privateState());}
 async function fakeFetch(url,options={}){
  requests.push({url,options});
  if(url==='/data'){if(failed)throw new Error('network');return response(200,current);}
@@ -74,6 +75,7 @@ const update=async()=>{current.current.sample_id++;await run('update()');};
 const login=async()=>{elems.adminPassword.value='dummy-input-for-node-test';await submit();};
 (async()=>{
  run(js);await flush();
+ assert.equal(elems.temperatureValue.textContent,'23.5');assert.equal(elems.humidityValue.textContent,'45.7');assert.equal(elems.personValue.textContent,'지정 ID 미검출');assert.equal(elems.mp3Value.textContent,'명령 대기');
  assert.equal(elems.status.textContent,'위험');assert.equal(elems.simulation.hidden,false);assert.equal(elems.notifyButton.disabled,true);assert(elems.notifyStatus.textContent.includes('HTTP'));
  assert.equal(elems.count.textContent,'2');assert.equal(elems.total.textContent,'부팅 후 총 측정: 12회 (실패 포함)');
  assert(elems.events.children[0].children[3].textContent.includes('<img src=x'));assert(elems.events.children[0].children.every(e=>e.children.length===0));
@@ -115,12 +117,18 @@ const login=async()=>{elems.adminPassword.value='dummy-input-for-node-test';awai
   await click(id);assert.deepEqual(JSON.parse(lastRequest('/admin/test').options.body),{kind:'led',mode,duration});assert.equal(elems.adminTestBanner.hidden,false);assert(elems.adminTestDescription.textContent.includes('LED만 시험'));assert(elems.adminTestDescription.textContent.includes('실제 측정'));
  }
  for(const [id,mode] of [['testSensorNormal','normal'],['testSensorWarning','warning'],['testSensorDanger','danger'],['testSensorFault','fault']]){
-  await click(id);assert.deepEqual(JSON.parse(lastRequest('/admin/test').options.body),{kind:'sensor',mode,duration:30});assert(elems.adminTestDescription.textContent.includes('모의 센서 시험'));assert(elems.adminLiveValue.textContent.includes('12,000'));
+  await click(id);assert.deepEqual(JSON.parse(lastRequest('/admin/test').options.body),{kind:'sensor',mode,duration:30,person:false,audio:false});assert(elems.adminTestDescription.textContent.includes('모의 센서 시험'));assert(elems.adminLiveValue.textContent.includes('12,000'));
  }
  n=countRequests('/admin/test');for(const input of ['','-1','1.5','65536','1e3']){elems.adminRaw.value=input;await click('testSensorRaw');assert.equal(countRequests('/admin/test'),n);}
  for(const raw of [0,65535]){elems.adminRaw.value=String(raw);await click('testSensorRaw');assert.equal(JSON.parse(lastRequest('/admin/test').options.body).raw,raw);}
- elems.adminDuration.value='120';await click('testSensorWarning');assert.equal(JSON.parse(lastRequest('/admin/test').options.body).duration,120);elems.adminDuration.value='30';
- await click('testScenario');assert.deepEqual(JSON.parse(lastRequest('/admin/test').options.body),{kind:'sequence',duration:60});
+ elems.adminDuration.value='120';await click('testSensorWarning');assert.equal(JSON.parse(lastRequest('/admin/test').options.body).duration,120);elems.adminDuration.value='30';elems.adminPerson.value='false';elems.adminPhysicalAudio.checked=false;
+ await click('testScenario');assert.deepEqual(JSON.parse(lastRequest('/admin/test').options.body),{kind:'sequence',duration:60,person:false,audio:false});
+ elems.adminPerson.value='true';elems.adminPhysicalAudio.checked=true;
+ await click('testSensorDanger');assert.deepEqual(JSON.parse(lastRequest('/admin/test').options.body),{kind:'sensor',mode:'danger',duration:30,person:true,audio:true});
+ await click('testScenario');assert.deepEqual(JSON.parse(lastRequest('/admin/test').options.body),{kind:'sequence',duration:60,person:true,audio:true});
+ await click('testAudio');assert.deepEqual(JSON.parse(lastRequest('/admin/test').options.body),{kind:'audio',mode:'test',duration:5});
+ assert(elems.adminMessage.textContent.includes('MP3 시험'));
+ elems.adminPerson.value='false';elems.adminPhysicalAudio.checked=false;
  startFailure={status:409,message:'실제 센서 경보가 있어 시험을 시작하지 않습니다.'};await click('testSensorDanger');assert(elems.adminMessage.textContent.includes('시작하지 않습니다'));assert(!elems.adminMessage.textContent.includes('시험이 시작되었습니다'));startFailure=null;
  console.log('PASS fixed LED durations, all sensor modes, raw bounds, selected duration, scenario, rejected start is not success');
 

@@ -7,7 +7,8 @@ import os
 
 class AdminError(Exception):
     def __init__(self, status, message, retry_after=None):
-        Exception.__init__(self, message)
+        # MicroPython does not expose Exception.__init__ on the native class.
+        super().__init__(message)
         self.status = status
         self.message = message
         self.retry_after = retry_after
@@ -228,6 +229,8 @@ class AdminController:
         mode = spec.get("mode")
         levels = None
         raw = None
+        person = None
+        audio = False
         if kind == "led":
             durations = {"green": 5, "yellow": 5, "red": 5, "all": 3, "sequence": 9}
             labels = {"green": "초록 LED 확인", "yellow": "노랑 LED 확인", "red": "빨강 LED 확인",
@@ -239,6 +242,13 @@ class AdminController:
                 raise AdminError(400, "이 LED 테스트의 시간은 {}초로 고정되어 있습니다.".format(durations[mode]))
             allowed = ("kind", "mode", "duration")
             label = labels[mode]
+        elif kind == "audio":
+            if mode != "test" or type(spec.get("duration", 5)) is not int or spec.get("duration", 5) != 5:
+                raise AdminError(400, "MP3 소리 시험은 test 모드의 5초 시험입니다.")
+            duration = 5
+            allowed = ("kind", "mode", "duration")
+            label = "MP3 실제 스피커 5초 시험"
+            audio = True
         elif kind == "sensor":
             labels = {"normal": "정상 판정 모의 시험", "warning": "주의 판정 모의 시험",
                       "danger": "위험 판정 모의 시험", "fault": "ADC 읽기 오류 모의 시험", "raw": "직접 입력 모의 시험"}
@@ -261,10 +271,16 @@ class AdminController:
             label = "정상 → 주의 → 위험 → 정상 모의 시험"
         else:
             raise AdminError(400, "지원하지 않는 테스트 종류입니다.")
+        if kind in ("sensor", "sequence"):
+            person = spec.get("person", False)
+            audio = spec.get("audio", False)
+            if type(person) is not bool or type(audio) is not bool:
+                raise AdminError(400, "모의 사람 감지와 스피커 시험은 True/False 값이어야 합니다.")
+            allowed += ("person", "audio")
         if any(key not in allowed for key in spec):
             raise AdminError(400, "지원하지 않는 테스트 설정이 포함되어 있습니다.")
         return {"kind": kind, "mode": mode, "duration": duration,
-                "label": label, "levels": levels, "raw": raw}
+                "label": label, "levels": levels, "raw": raw, "person": person, "audio": audio}
 
     def start_test(self, token, spec, now_ms, alarm_settings):
         self.require(token, now_ms)
@@ -320,6 +336,7 @@ class AdminController:
                 "enabled": self.enabled, "active": False, "id": None,
                 "kind": None, "mode": None, "label": "관리자 테스트 없음",
                 "phase": None, "remaining_seconds": 0, "stop_reason": self._stop_reason,
+                "person": None, "audio": False,
             }
         job = self.test
         return {
@@ -327,6 +344,7 @@ class AdminController:
             "kind": job["kind"], "mode": job["mode"], "label": job["label"],
             "phase": self._phase(now_ms), "remaining_seconds": _seconds(job["ends_ms"] - now_ms),
             "stop_reason": "",
+            "person": job["person"], "audio": job["audio"],
         }
 
     def private_status(self, token, now_ms, touch=True):

@@ -1,8 +1,24 @@
+## 현재 배포 안내 · v2.2.0 (2026-11-12)
+
+**온습도 센서 SHT40 + 클래식 HUSKYLENS 사람 감지 + Seeed Grove MP3 V4 스피커를 통합했습니다.** 기존 MQ-2 판정, LED, 관리자 비밀번호·모의 시험, 웹 CSV는 유지합니다. **가스 주의·위험과 확인된 사람 감지가 동시에 성립할 때만 자동 MP3 경보**를 요청하며, 사람 인식에 실패해도 기존 LED 가스 경보는 독립적으로 동작합니다.
+
+- 새 배선·전원·I2C/UART·사람 ID·테스트 순서: **[EXPANSION_GUIDE.md](EXPANSION_GUIDE.md)**를 먼저 보세요. 특히 **MP3 UART 5V↔3.3V 레벨 변환**과 외부 5V 전원 공통 GND를 확인해야 합니다.
+- 기존 Pico에 적용할 파일: `main.py`, `admin_control.py`, `dashboard.html` 교체 + `peripheral_config.py`, `peripheral_sensors.py`, `mp3_player.py`, `peripherals.py` 추가. **`wifi_config.py`·`admin_config.py`·`alarm_logic.py`·`config.py`는 유지**합니다.
+- MP3 카드: `sd_card/0001.mp3`, `0002.mp3`, `0003.mp3`를 **Pico가 아닌 MP3의 microSD 루트**에 넣습니다. 음원은 **테스트용 신호음**이며 녹음된 한국어 목소리가 아닙니다.
+- 사람 감지는 기본적으로 검증 대기입니다. 실제 HUSKYLENS가 `person: ID번호`를 표시하는 것을 본 뒤에만 `HUSKY_PERSON_ID_CONFIRMED = True`로 바꾸세요.
+- 아래 기존 v2.1 관리자 소개와 상세 내용은 이전 개발 단계에 관한 설명을 일부 포함합니다. 설치·배선 차이가 있으면 **이 v2.2 안내와 [EXPANSION_GUIDE.md](EXPANSION_GUIDE.md)**를 우선합니다.
+
+**검증 범위:** PC Python 179개, 대시보드 DOM 모의, MicroPython Unix 통신 모형 시험 통과. **실제 Pico·세 모듈·스피커를 연결한 시험은 아직 미실시**입니다. 가스 측정 ADC 값은 교정 ppm이 아니며 안전 인증 경보기를 대체할 수 없습니다.
+
+---
+
 # 가스 누출 조기 경보 시스템
 
-**Pico W + MQ-2 + LED로 센서 변화와 경보 상태를 관찰하는 교육용 시제품입니다.**
+**Pico W + MQ-2 + LED + SHT40 + HUSKYLENS + Grove MP3 V4를 연결하는 교육용 시제품입니다.**
 
 **v2.1 관리자 모드:** 메인 화면에서 비밀번호로 로그인해 LED와 가상 주의·위험 상태를 시험할 수 있습니다. 기존 설치에서는 `main.py`, `dashboard.html`을 교체하고 `admin_control.py`, 개인용 `admin_config.py`를 추가합니다. 기존 Wi-Fi·핀 설정은 유지하세요. 자세한 사용 순서는 [ADMIN_GUIDE.md](ADMIN_GUIDE.md)에 있습니다.
+
+**v2.1.1 로그인 오류 수정:** MicroPython에서 지원하지 않는 `Exception.__init__(self, message)` 호출을 `super().__init__(message)`로 고쳤습니다. 이전 버전에서는 잘못된 비밀번호·개인 설정 누락 등의 안내를 만들다가 `AttributeError`가 발생해, 브라우저에 통신 오류로 보일 수 있었습니다. 기존 관리자 화면의 HTML은 그대로 사용합니다. [수정 방법](ADMIN_GUIDE.md#로그인할-때-통신-오류가-표시되는-경우)을 참고하세요.
 
 GitHub에는 소스와 개발 기록을 보관하고, Thonny로 실행 파일을 Pico에 저장합니다. 웹 대시보드는 Pico가 직접 제공합니다. GitHub에 파일을 올리는 것만으로 센서 프로그램이 실행되는 것은 아닙니다.
 
@@ -29,7 +45,11 @@ GitHub에는 소스와 개발 기록을 보관하고, Thonny로 실행 파일을
 | `alarm_logic.py` | 상태 판정, 변화량, 통계, 최근 기록 | 예 |
 | `admin_control.py` | 관리자 인증, 짧은 LED·가상 센서 시험, 자동 종료 | 예 |
 | `config.py` | 핀, 임계값, 예열 안내, 시험 모드 설정 | 예 |
-| `dashboard.html` | 휴대전화·PC 웹 화면 | 예 |
+| `dashboard.html` | 휴대전화·PC 웹 화면과 관리자 확장 시험 | 예 |
+| `peripheral_config.py` | SHT40·HUSKYLENS·MP3 핀과 감지·소리 조건 | 예 |
+| `peripheral_sensors.py` | 온습도·카메라의 I2C 통신·데이터 검증 | 예 |
+| `mp3_player.py` | MP3 V4 UART AT 명령 제어 | 예 |
+| `peripherals.py` | 독립 갱신·사람-가스 연동 스피커 제어 | 예 |
 | `wifi_config.example.py` | 비밀번호가 없는 Wi-Fi 설정 양식 | `wifi_config.py`로 복사 후 저장 |
 | `admin_config.example.py` | 비밀 값이 없는 관리자 설정 양식 | 개인용 `admin_config.py`를 별도로 저장 |
 | `.gitignore` | 실제 Wi-Fi 비밀번호와 임시 파일 제외 | 아니요 |
@@ -37,7 +57,9 @@ GitHub에는 소스와 개발 기록을 보관하고, Thonny로 실행 파일을
 | `DEVELOPMENT_LOG.md` | 1일차 기록과 개선판 작업 기록 | 아니요 |
 | `TESTING.md` | 자동 시험·실기기 시험 절차와 기록표 | 아니요 |
 | `VALIDATION.md` | 이번 소프트웨어 검증 결과와 남은 검증 범위 | 아니요 |
-| `ADMIN_GUIDE.md` | 관리자 모드 설치·LED 시험·가상 시험 사용법 | 아니요 |
+| `ADMIN_GUIDE.md` | 관리자 모드 설치·LED·가상 시험 사용법 | 아니요 |
+| `EXPANSION_GUIDE.md` | **v2.2 하드웨어 배선·교체 대상·카메라 설정·스피커 시험** | 아니요 |
+| `sd_card/` | MP3 microSD 루트에 넣는 세 가지 테스트 음원 | 아니요 (MP3 카드로) |
 | `tests/` | PC에서 실행하는 자동 검증 코드 | 아니요 |
 | `tools/preview.py` | PC에서 가상값으로 웹 화면을 보는 도구 | 아니요 |
 | `tools/make_admin_config.py` | PC에서 개인 관리자 설정 생성 | 아니요 |
@@ -52,7 +74,7 @@ MQ-2 제조사 표준 회로는 히터 전원 5V를 사용합니다. 반면 Pico
 
 | 부품 단자 | 연결 |
 |---|---|
-| MQ-2 `VCC` | USB로 Pico를 구동할 때 `VBUS`, 물리 핀 40 |
+| MQ-2 `VCC` | **안정된 별도 5V 전원(+)**. 외부 5V(+)를 USB로 구동 중인 Pico의 VBUS에 연결하지 않음 |
 | MQ-2 `GND` | Pico `GND`, 예: 물리 핀 38 |
 | MQ-2 `AO` | 10kΩ 저항 R1의 한쪽 끝 |
 | R1의 다른 끝 | **분압 중간점**: GP26, 물리 핀 31에 연결 |
@@ -63,7 +85,7 @@ MQ-2 제조사 표준 회로는 히터 전원 5V를 사용합니다. 반면 Pico
 
 두 저항의 값이 같으면 계산상 중간점 전압은 AO 전압의 절반입니다. 예를 들어 AO가 5.0V이면 GP26은 약 2.5V입니다. 실제 연결 후에는 멀티미터로 GP26-GND 사이가 3.3V를 넘지 않는지 확인하세요.
 
-VBUS는 USB 전원에 의존합니다. 센서 히터 소비전력은 제조사 기준 최대 950mW이므로 USB 공급과 모듈 사양을 확인하세요. 센서 전원을 GPIO나 3V3 핀에서 공급하지 않습니다. 이 안내는 USB 전원 구성이며 별도 5V 전원을 병렬로 연결하는 구성은 포함하지 않습니다. [1][3]
+v2.2 확장 구성은 Pico W를 USB로 구동하고, MQ-2·HUSKYLENS·Grove MP3 V4에 **별도의 안정된 5V 전원**을 공급합니다. **GND는 공통 연결하되 외부 5V(+)를 Pico VBUS(+)에 직접 병렬 연결하지 않습니다.** 센서 전원을 GPIO나 3V3 핀에서 공급하지 않습니다. 상세 배선은 [v2.2 확장 연결 안내](EXPANSION_GUIDE.md#1-준비물과-전원)를 따라 주세요. [1][3]
 
 ### LED
 
@@ -93,9 +115,9 @@ WIFI_SSID = "내_와이파이_이름"
 WIFI_PASSWORD = "내_와이파이_비밀번호"
 ```
 
-5. 기존 프로그램이 실행 중이면 Thonny의 중지 버튼으로 멈춥니다. 처음 설치할 때는 아래 **7개 파일을 Pico의 최상위 폴더**로 올립니다. 같은 이름의 기존 파일을 교체할 때는 PC에 먼저 사본을 보관하세요. 준비 파일을 먼저 올리고 `main.py`를 마지막에 올리면 좋습니다.
+5. 기존 프로그램이 실행 중이면 Thonny의 중지 버튼으로 멈춥니다. **v2.2 전체 설치는 11개 실행 파일**이 필요합니다. 기존 관리자 버전이 작동하고 있다면 [확장 안내의 **7개만 교체·추가**](EXPANSION_GUIDE.md#4-thonny에서-업데이트할-파일)하고 개인용 Wi-Fi·관리자·센서 설정 4개는 보관하는 편이 안전합니다. 기존 파일을 교체할 때는 PC에 사본을 남기고 `main.py`는 마지막에 올리면 좋습니다.
 
-   `main.py`, `alarm_logic.py`, `admin_control.py`, `config.py`, `dashboard.html`, `wifi_config.py`, `admin_config.py`
+   `main.py`, `alarm_logic.py`, `admin_control.py`, `config.py`, `dashboard.html`, `wifi_config.py`, `admin_config.py`, `peripheral_config.py`, `peripheral_sensors.py`, `mp3_player.py`, `peripherals.py`
 
    Python 파일은 각각 저장 대상을 `Raspberry Pi Pico`로 선택해 저장할 수도 있습니다. HTML은 파일 목록에서 PC 파일을 선택해 장치로 업로드하세요. `main.py`만 올리면 나머지 파일을 찾지 못합니다.
 

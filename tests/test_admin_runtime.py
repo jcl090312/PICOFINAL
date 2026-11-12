@@ -456,5 +456,46 @@ class AdminRuntimeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.system.active_clients, 0)
 
 
+    async def test_virtual_person_and_audio_settings_reach_live_api(self):
+        token = await self.login()
+        spec = {"kind":"sensor", "mode":"danger", "duration":30, "person":True, "audio":True}
+        # Audio hardware isn't present in the mock. Check the endpoint only
+        # becomes available when the MP3 feature reports enabled.
+        self.system.peripherals = None
+        status, _, body = await self.request("POST", "/admin/test", token=token, data=spec)
+        self.assertEqual(status, 503)
+        self.assertFalse(self.system.admin.public_status(self.clock.ms())["active"])
+        class FakePeripheral:
+            audio = {"enabled": True}
+            def snapshot(self, now):
+                return {"environment":{}, "person":{}, "audio":self.audio}
+        self.system.peripherals = FakePeripheral()
+        status, _, body = await self.request("POST", "/admin/test", token=token, data=spec)
+        self.assertEqual(status, 200, body)
+        self.assertEqual(json.loads(body)["test"]["person"], True)
+        self.assertEqual(json.loads(body)["test"]["audio"], True)
+        self.tick(1000)
+        data = self.system.snapshot()
+        self.assertEqual(data["admin"]["kind"], "sensor")
+        self.assertEqual(data["admin"]["person"], True)
+        self.assertIn("peripherals", data)
+
+    async def test_audio_only_trial_does_not_inject_virtual_gas(self):
+        token = await self.login()
+        class FakePeripheral:
+            audio = {"enabled": True}
+            def snapshot(self, now):
+                return {"environment":{}, "person":{}, "audio":self.audio}
+        self.system.peripherals = FakePeripheral()
+        status, _, body = await self.request("POST", "/admin/test", token=token,
+                                             data={"kind":"audio", "mode":"test", "duration":5})
+        self.assertEqual(status, 200, body)
+        self.assertEqual(self.system.admin.test["kind"], "audio")
+        self.assertIsNone(self.system.test_model)
+        self.assertEqual(self.system.snapshot()["current"]["source"], "sensor")
+        self.tick(5000)
+        self.assertFalse(self.system.admin.public_status(self.clock.ms())["active"])
+        self.assertIsNone(self.system.test_model)
+
 if __name__ == "__main__":
     unittest.main()

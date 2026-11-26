@@ -47,7 +47,7 @@ class ManualClock:
 class AdminRuntimeTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.config_patch = patch.multiple(
-            firmware.C, WARMUP_SECONDS=0, SAMPLE_INTERVAL_MS=1000,
+            firmware.C, LED_STICK_ENABLED=False, GREEN_LED_PIN=14, YELLOW_LED_PIN=15, RED_LED_PIN=16, WARMUP_SECONDS=0, SAMPLE_INTERVAL_MS=1000,
             STALE_SAMPLE_MS=4500, CONSOLE_LOG=False, SIMULATION=False,
             BUZZER_PIN=17, HTTP_HEADER_TIMEOUT_MS=100,
             HTTP_WRITE_TIMEOUT_MS=100,

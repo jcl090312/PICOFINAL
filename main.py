@@ -1,7 +1,7 @@
 """Pico W / Pico 2 W + MQ-2 교육용 가스 누출 경보기.
 
 필수 파일: main.py, config.py, alarm_logic.py, admin_control.py,
-dashboard.html, wifi_config.py, admin_config.py(관리자 비밀번호 설정)
+dashboard.html, rgb_stick.py, wifi_config.py, admin_config.py(관리자 비밀번호 설정)
 추가 pip 패키지 없이 보드용 MicroPython에서 실행합니다.
 """
 
@@ -38,7 +38,7 @@ try:
 except ImportError:
     WIFI_SSID, WIFI_PASSWORD = "", ""
 
-FIRMWARE_VERSION = "2.2.0-integrated"
+FIRMWARE_VERSION = "2.3.0-day8"
 ADMIN_BODY_LIMIT = 512
 
 
@@ -70,7 +70,20 @@ def validate_hardware_settings():
     if C.ADC_MEDIAN_READS not in (1, 3, 5, 7, 9):
         raise ValueError("ADC_MEDIAN_READS must be 1, 3, 5, 7 or 9")
     pins = [C.ADC_PIN]
-    for name in ("GREEN_LED_PIN", "YELLOW_LED_PIN", "RED_LED_PIN", "BUZZER_PIN"):
+    if type(C.LED_STICK_ENABLED) is not bool:
+        raise ValueError("LED_STICK_ENABLED must be True or False")
+    led_pins = ("LED_STICK_PIN",) if C.LED_STICK_ENABLED else ("GREEN_LED_PIN", "YELLOW_LED_PIN", "RED_LED_PIN")
+    if C.LED_STICK_ENABLED:
+        if C.LED_STICK_PIN is None:
+            raise ValueError("LED_STICK_PIN is required")
+        if type(C.LED_STICK_COUNT) is not int or not 3 <= C.LED_STICK_COUNT <= 64:
+            raise ValueError("Invalid LED_STICK_COUNT")
+        if type(C.LED_STICK_BRIGHTNESS) is not int or not 1 <= C.LED_STICK_BRIGHTNESS <= 255:
+            raise ValueError("Invalid LED_STICK_BRIGHTNESS")
+        if (type(C.LED_STICK_TIMING) is not tuple or len(C.LED_STICK_TIMING) != 4
+                or any(type(t) is not int or t <= 0 for t in C.LED_STICK_TIMING)):
+            raise ValueError("Invalid LED_STICK_TIMING")
+    for name in led_pins + ("BUZZER_PIN",):
         value = getattr(C, name)
         if value is not None:
             if type(value) is not int or not (0 <= value <= 28) or value in (23, 24, 25):
@@ -93,9 +106,22 @@ def validate_hardware_settings():
 class Outputs:
     def __init__(self):
         inactive = 0 if C.LED_ACTIVE_HIGH else 1
-        self.green = self.pin(C.GREEN_LED_PIN, inactive)
-        self.yellow = self.pin(C.YELLOW_LED_PIN, inactive)
-        self.red = self.pin(C.RED_LED_PIN, inactive)
+        self.stick = None
+        self.led_error = None
+        self.led_mode = "rgb_stick" if C.LED_STICK_ENABLED else "discrete"
+        self.green = self.yellow = self.red = None
+        if C.LED_STICK_ENABLED:
+            try:
+                from rgb_stick import RGBStick
+                self.stick = RGBStick(C.LED_STICK_PIN, C.LED_STICK_COUNT,
+                                      C.LED_STICK_TIMING, C.LED_STICK_BRIGHTNESS)
+            except Exception as exc:
+                self.led_error = "RGB LED 초기화 실패: " + type(exc).__name__
+                print(self.led_error)
+        else:
+            self.green = self.pin(C.GREEN_LED_PIN, inactive)
+            self.yellow = self.pin(C.YELLOW_LED_PIN, inactive)
+            self.red = self.pin(C.RED_LED_PIN, inactive)
         self.buzzer = self.pin(C.BUZZER_PIN, 0 if C.BUZZER_ACTIVE_HIGH else 1)
         self.onboard = None
         if C.USE_ONBOARD_LED:
@@ -113,6 +139,20 @@ class Outputs:
         if pin is not None:
             pin.value(int(bool(on) == bool(active_high)))
 
+    def set_leds(self, values):
+        if self.stick is not None:
+            try:
+                self.stick.set_states(values)
+                self.led_error = None
+            except Exception as exc:
+                error = "RGB LED 출력 실패: " + type(exc).__name__
+                if self.led_error != error:
+                    print(error)
+                self.led_error = error
+        elif not C.LED_STICK_ENABLED:
+            for pin, on in zip((self.green, self.yellow, self.red), values):
+                self.set_pin(pin, on, C.LED_ACTIVE_HIGH)
+
     def apply(self, state, now_ms, wifi_connected=False, allow_buzzer=True):
         green = state == "normal"
         yellow = state == "warning"
@@ -129,24 +169,20 @@ class Outputs:
             yellow = (now_ms % 1000) < 500
             red = not yellow
             buzz = (now_ms % 3000) < 100
-        self.set_pin(self.green, green, C.LED_ACTIVE_HIGH)
-        self.set_pin(self.yellow, yellow, C.LED_ACTIVE_HIGH)
-        self.set_pin(self.red, red, C.LED_ACTIVE_HIGH)
+        self.set_leds((green, yellow, red))
         self.set_pin(self.buzzer, buzz and allow_buzzer, C.BUZZER_ACTIVE_HIGH)
         if self.onboard is not None:
             self.onboard.value(1 if wifi_connected else int((now_ms % 2000) < 100))
 
     def apply_test(self, values, now_ms, wifi_connected=False):
         """개별 LED 확인. 장치 부저는 관리자 시험 중 울리지 않습니다."""
-        for pin, on in zip((self.green, self.yellow, self.red), values):
-            self.set_pin(pin, on, C.LED_ACTIVE_HIGH)
+        self.set_leds(values)
         self.set_pin(self.buzzer, False, C.BUZZER_ACTIVE_HIGH)
         if self.onboard is not None:
             self.onboard.value(1 if wifi_connected else int((now_ms % 2000) < 100))
 
     def off(self):
-        for pin in (self.green, self.yellow, self.red):
-            self.set_pin(pin, False, C.LED_ACTIVE_HIGH)
+        self.set_leds((False, False, False))
         self.set_pin(self.buzzer, False, C.BUZZER_ACTIVE_HIGH)
         if self.onboard is not None:
             self.onboard.value(0)
@@ -217,7 +253,8 @@ class System:
         self.server = None
         self.peripherals = None
         if PeripheralManager is not None and P is not None:
-            pins = (C.ADC_PIN, C.GREEN_LED_PIN, C.YELLOW_LED_PIN, C.RED_LED_PIN, C.BUZZER_PIN)
+            led_pins = (C.LED_STICK_PIN,) if C.LED_STICK_ENABLED else (C.GREEN_LED_PIN, C.YELLOW_LED_PIN, C.RED_LED_PIN)
+            pins = (C.ADC_PIN, C.BUZZER_PIN) + led_pins
             self.peripherals = PeripheralManager(P, self.clock, self.audio_context, reserved_pins=pins)
 
     def audio_context(self):
@@ -409,6 +446,8 @@ class System:
             "base_simulation": C.SIMULATION,
             "free_heap_bytes": gc.mem_free() if hasattr(gc, "mem_free") else None,
             "firmware_version": FIRMWARE_VERSION,
+            "led_mode": self.outputs.led_mode,
+            "led_error": self.outputs.led_error,
         }
 
     def admin_status(self, token, now, touch=True):

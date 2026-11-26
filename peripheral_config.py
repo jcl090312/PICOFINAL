@@ -1,10 +1,10 @@
-"""v2.2 추가 장치 설정. GP 번호이며 기존 config.py와 별도로 관리합니다."""
+"""v2.3 추가 장치 설정. GP 번호이며 기존 config.py와 별도로 관리합니다."""
 
-# Grove SHT40: 3.3V로 공급. SDA=GP4, SCL=GP5.
+# Grove SHT40: 3.3V로 공급. SDA=GP8, SCL=GP9 (Grove I2C0).
 SHT40_ENABLED = True
 SHT40_I2C_ID = 0
-SHT40_SDA_PIN = 4
-SHT40_SCL_PIN = 5
+SHT40_SDA_PIN = 8
+SHT40_SCL_PIN = 9
 SHT40_ADDRESS = 0x44
 SHT40_INTERVAL_MS = 2000
 SHT40_STALE_MS = 6000
@@ -32,15 +32,15 @@ PERIPHERAL_RETRY_MS = 3000
 
 # Seeed Grove MP3 v4.0 / WT2605CX 전용. DFPlayer Mini용 코드가 아닙니다.
 # 모듈은 5V 전원. Grove UART도 5V 측이므로 두 신호에 3.3V<->5V 레벨 변환 필요.
-# Pico GP0(TX) -> 변환기 -> MP3 RX, MP3 TX -> 변환기 -> Pico GP1(RX).
+# Pico GP4(TX) -> 변환기 -> MP3 RX, MP3 TX -> 변환기 -> Pico GP5(RX).
 MP3_ENABLED = True
-MP3_UART_ID = 0
-MP3_TX_PIN = 0
-MP3_RX_PIN = 1
+MP3_UART_ID = 1
+MP3_TX_PIN = 4
+MP3_RX_PIN = 5
 MP3_BAUDRATE = 115200
-MP3_TIMEOUT_MS = 500
-MP3_VOLUME = 8  # 0~31. 작은 값으로 시작하고 실제 소리를 확인합니다.
-MP3_STARTUP_MS = 2000
+MP3_TIMEOUT_MS = 1500
+MP3_VOLUME = 7  # 0~31. 작은 값으로 시작하고 실제 소리를 확인합니다.
+MP3_STARTUP_MS = 3000
 
 # microSD(FAT16/FAT32)의 최상위 폴더에 아래 파일을 넣습니다.
 # 번호 순서가 아니라 파일 이름으로 재생하므로 복사 순서에 의존하지 않습니다.

@@ -208,7 +208,7 @@ function render(data) {
   put("riseSetting", "초당 +" + number(config.rapid_rise_per_second) + " 이상 " + number(config.rapid_rise_count) + "회");
   put("warmupSetting", number(config.warmup_seconds) + "초 · 남은 시간 " + number(c.warmup_remaining) + "초");
   put("historyNote", "최근 측정 " + number(config.history_size) + "개와 경고 " + number(config.event_size) + "개를 메모리에 보관합니다. 재시작하면 지워지므로 필요한 기록은 CSV로 내려받으세요.");
-  put("deviceInfo", "Pico " + (data.device.ip || "주소 확인 중") + " · 실행 " + String(data.boot_id || "—") + " · 펌웨어 " + String(data.device.firmware_version || "—") + " · 대시보드 2026.11");
+  put("deviceInfo", "Pico " + (data.device.ip || "주소 확인 중") + " · 실행 " + String(data.boot_id || "—") + " · 펌웨어 " + String(data.device.firmware_version || "—") + " · 대시보드 2026.11" + (data.device.led_error ? " · " + data.device.led_error : ""));
   acceptPeripherals(data.peripherals);
   drawChart(); renderEvents(data.events); updateAge();
   if (fresh) renderStatus(data); else markUnavailable(latestReason);

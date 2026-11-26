@@ -137,7 +137,7 @@ class Writer:
 class RuntimeChecks(unittest.TestCase):
     def setUp(self):
         self.config_patch = patch.multiple(
-            firmware.C, WARMUP_SECONDS=0, SAMPLE_INTERVAL_MS=100,
+            firmware.C, LED_STICK_ENABLED=False, GREEN_LED_PIN=14, YELLOW_LED_PIN=15, RED_LED_PIN=16, WARMUP_SECONDS=0, SAMPLE_INTERVAL_MS=100,
             STALE_SAMPLE_MS=300, CONSOLE_LOG=False, SIMULATION=False,
             HTTP_HEADER_TIMEOUT_MS=100, HTTP_WRITE_TIMEOUT_MS=100,
         )
@@ -230,7 +230,7 @@ class RuntimeChecks(unittest.TestCase):
 class AsyncRuntimeChecks(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.config_patch = patch.multiple(
-            firmware.C, WARMUP_SECONDS=0, SAMPLE_INTERVAL_MS=100,
+            firmware.C, LED_STICK_ENABLED=False, GREEN_LED_PIN=14, YELLOW_LED_PIN=15, RED_LED_PIN=16, WARMUP_SECONDS=0, SAMPLE_INTERVAL_MS=100,
             STALE_SAMPLE_MS=300, CONSOLE_LOG=False, SIMULATION=False,
             HTTP_HEADER_TIMEOUT_MS=100, HTTP_WRITE_TIMEOUT_MS=100,
         )

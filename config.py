@@ -1,14 +1,19 @@
-"""Pico W 가스 경보기 설정. 핀 번호는 물리 번호가 아닌 GP 번호입니다."""
+"""Pico 2 W 가스 경보기 v2.3 설정. 핀 번호는 물리 번호가 아닌 GP 번호입니다."""
 
 # 센서: MQ-2 AO에는 반드시 3.3V 이하가 되도록 분압 회로를 사용하세요.
 ADC_PIN = 26
 ADC_MEDIAN_READS = 5  # 1회 측정마다 5번 읽은 중앙값, 홀수만 허용
 
-# 각 LED: GP 핀 -> 330옴 -> LED 긴 다리(+), 짧은 다리(-) -> GND
-# 사용하지 않는 LED는 None. 빨간 LED만 있다면 GREEN/YELLOW를 None으로 변경.
-GREEN_LED_PIN = 14
-YELLOW_LED_PIN = 15
-RED_LED_PIN = 16
+# 6일차 실물 시험 성공: Grove RGB LED Stick (10 WS2813 Mini), D16.
+LED_STICK_ENABLED = True
+LED_STICK_PIN = 16
+LED_STICK_COUNT = 10
+LED_STICK_TIMING = (350, 900, 800, 450)
+LED_STICK_BRIGHTNESS = 20  # 1..255, 작은 값으로 시작
+# 일반 LED 세 개를 쓰는 옛 방식은 Stick을 끈 경우에만 사용.
+GREEN_LED_PIN = None
+YELLOW_LED_PIN = None
+RED_LED_PIN = None
 LED_ACTIVE_HIGH = True
 USE_ONBOARD_LED = True  # Wi-Fi 상태 표시. 외부 경보 LED와 역할이 다릅니다.
 

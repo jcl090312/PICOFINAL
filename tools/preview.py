@@ -103,9 +103,13 @@ def temporary_admin_settings(password):
 async def run_preview(port, password=None):
     firmware = load_firmware()
     firmware.C.SIMULATION = True
+    firmware.C.LED_STICK_ENABLED = False
+    firmware.C.GREEN_LED_PIN = 14
+    firmware.C.YELLOW_LED_PIN = 15
+    firmware.C.RED_LED_PIN = 16
     firmware.C.CONSOLE_LOG = False
     firmware.C.HTTP_PORT = port
-    firmware.FIRMWARE_VERSION = "2.2.0-PC-preview"
+    firmware.FIRMWARE_VERSION = "2.3.0-PC-preview"
     # Desktop preview must never initialise real I2C/UART devices.
     if firmware.P is not None:
         firmware.P.SHT40_ENABLED = False

@@ -2,7 +2,7 @@
 
 Official protocol (sections 3.1.1, 4.1.3, 4.1.10, 4.1.13, 4.1.16):
 https://files.seeedstudio.com/wiki/grove-mp3-v4/WT2605C-32N-A001-datasheet.pdf
-115200 baud, 8N1; AT commands end in CR. Filename playback uses SPLAY.
+115200 baud, 8N1; AT commands use CRLF (day 7 comparison with working module). Filename playback uses SPLAY.
 REPEATMODE=5 is single playback; Arduino's enum value 4 is translated to 5.
 
 Inject a UART configured with timeout=0 and a short timeout_char (e.g. 1).
@@ -100,6 +100,13 @@ class WT2605CPlayer:
             return True
         # The datasheet lists numeric result codes 1..13. Accept explicit
         # ERROR forms too; never treat a +PLAY notification as an ACK.
+        if line.startswith(b"ERR:"):
+            code = line[4:].strip()
+            if code and all(48 <= char <= 57 for char in code):
+                number = code.decode()
+                hint = {"6": "저장장치를 찾지 못함", "9": "저장장치 검색 실패", "10": "파일 확인 필요"}.get(number, "모듈 명령 오류")
+                raise MP3Error("rejected", "ERR:" + number + " · " + hint)
+            raise MP3Error("rejected", "MP3 module returned ERR")
         if line.startswith(b"ERROR") or line.startswith(b"+ERROR"):
             raise MP3Error("rejected", "MP3 module rejected the command")
         if line and all(48 <= char <= 57 for char in line):
@@ -109,7 +116,7 @@ class WT2605CPlayer:
     async def _command(self, text, name, track, cancelled):
         started = ticks_ms()
         await self._discard_stale(started, cancelled)
-        frame = (text + "\r").encode("ascii")
+        frame = (text + "\r\n").encode("ascii")
         offset = 0
         while offset < len(frame):
             self._check(started, cancelled)

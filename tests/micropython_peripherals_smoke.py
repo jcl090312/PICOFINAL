@@ -97,7 +97,7 @@ class _UART:
     def any(self):
         return len(self.pending)
     def write(self, data):
-        assert data.endswith(b'\r')
+        assert data.endswith(b'\r\n')
         self.commands.append(bytes(data))
         self.pending.extend(b'OK\r\n')
         return len(data)
@@ -132,8 +132,8 @@ async def _async_smoke():
     assert (await player.configure(volume=8))['acknowledged']
     assert (await player.play('0002.mp3'))['acknowledged']
     assert (await player.stop())['acknowledged']
-    assert uart.commands == [b'AT+STOP\r', b'AT+VOL=8\r', b'AT+REPEATMODE=5\r',
-                             b'AT+SPLAY=sd0,0002.mp3\r', b'AT+STOP\r']
+    assert uart.commands == [b'AT+STOP\r\n', b'AT+VOL=8\r\n', b'AT+REPEATMODE=5\r\n',
+                             b'AT+SPLAY=sd0,0002.mp3\r\n', b'AT+STOP\r\n']
     print('PASS: MicroPython async SHT40 / HUSKY / MP3 command paths with fake buses')
 
 

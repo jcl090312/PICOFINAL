@@ -42,8 +42,8 @@ class UART:
             data = data[:self.write_size]
         self.tx.extend(data)
         self.pending.extend(data)
-        while b"\r" in self.pending:
-            command, rest = bytes(self.pending).split(b"\r", 1)
+        while b"\r\n" in self.pending:
+            command, rest = bytes(self.pending).split(b"\r\n", 1)
             self.pending = bytearray(rest)
             self.commands.append(command)
             if self.replies:
@@ -65,14 +65,14 @@ class MP3Tests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result, {"command": "configure", "track": None,
                                   "acknowledged": True, "volume": 8})
 
-    async def test_filename_play_and_stop_have_exact_cr_frames(self):
+    async def test_filename_play_and_stop_have_exact_crlf_frames(self):
         uart = UART([b"OK\r", b"OK\r"])
         player = WT2605CPlayer(uart)
         self.assertEqual(await player.play("0002.mp3"),
                          {"command": "play", "track": "0002.mp3", "acknowledged": True})
         self.assertEqual(await player.stop(),
                          {"command": "stop", "track": None, "acknowledged": True})
-        self.assertEqual(uart.tx, b"AT+SPLAY=sd0,0002.mp3\rAT+STOP\r")
+        self.assertEqual(uart.tx, b"AT+SPLAY=sd0,0002.mp3\r\nAT+STOP\r\n")
 
     async def test_fragmented_echo_and_play_notifications_do_not_mask_ack(self):
         uart = UART([b"AT+SPLAY=sd0,0001.mp3\r\n+PLAY:START,sd0,1,12\r\nOK\r\n"])
@@ -89,9 +89,15 @@ class MP3Tests(unittest.IsolatedAsyncioTestCase):
         await self.assert_kind("timeout", WT2605CPlayer(uart, 20).stop())
 
     async def test_error_responses_fail_without_fabricated_ack(self):
-        for reply in (b"10\r", b"ERROR\r", b"ERROR:10\r\n", b"+ERROR:7\n"):
+        for reply in (b"10\r", b"ERROR\r", b"ERROR:10\r\n", b"+ERROR:7\n", b"\r\nERR:6\r\n", b"\r\nERR:9\r\n"):
             with self.subTest(reply=reply):
                 await self.assert_kind("rejected", WT2605CPlayer(UART([reply])).play("0001.mp3"))
+
+    async def test_observed_sd_errors_preserve_code(self):
+        for code in (6, 9):
+            reply = ("\r\nERR:%d\r\n" % code).encode()
+            error = await self.assert_kind("rejected", WT2605CPlayer(UART([reply])).play("0001.mp3"))
+            self.assertIn("ERR:%d" % code, error.message)
 
     async def test_invalid_filename_cannot_inject_command_or_path(self):
         for filename in (None, 1, b"0001.mp3", "", "a", ".mp3", "123456789.mp3",
@@ -157,7 +163,7 @@ class MP3Tests(unittest.IsolatedAsyncioTestCase):
     async def test_partial_uart_writes_preserve_frame(self):
         uart = UART(write_size=2)
         self.assertTrue((await WT2605CPlayer(uart).play("0003.mp3"))["acknowledged"])
-        self.assertEqual(uart.tx, b"AT+SPLAY=sd0,0003.mp3\r")
+        self.assertEqual(uart.tx, b"AT+SPLAY=sd0,0003.mp3\r\n")
 
     async def test_nonprogressing_write_is_bounded(self):
         uart = UART(write_size=0)

@@ -103,7 +103,7 @@ class PeripheralManager:
         self.audio.update({"auto_enabled": setting(settings, "AUTO_AUDIO_ENABLED", False),
                            "mode": "idle", "eligible": False, "condition": "MP3 준비 중",
                            "last_command": None, "track": None, "last_sent_ms": None,
-                           "acknowledged": None, "volume": setting(settings, "MP3_VOLUME", 8)})
+                           "acknowledged": None, "volume": setting(settings, "MP3_VOLUME", 7)})
 
     def _state(self, name, enabled):
         error = self._validation.get(name)
@@ -188,13 +188,13 @@ class PeripheralManager:
             return self.factories["audio"]()
         import machine
         from mp3_player import WT2605CPlayer
-        uart = machine.UART(setting(self.settings, "MP3_UART_ID", 0),
+        uart = machine.UART(setting(self.settings, "MP3_UART_ID", 1),
                             baudrate=setting(self.settings, "MP3_BAUDRATE", 115200),
-                            tx=machine.Pin(setting(self.settings, "MP3_TX_PIN", 0)),
-                            rx=machine.Pin(setting(self.settings, "MP3_RX_PIN", 1)),
+                            tx=machine.Pin(setting(self.settings, "MP3_TX_PIN", 4)),
+                            rx=machine.Pin(setting(self.settings, "MP3_RX_PIN", 5)),
                             bits=8, parity=None, stop=1, timeout=0, timeout_char=1,
                             txbuf=128, rxbuf=256)
-        return WT2605CPlayer(uart, timeout_ms=setting(self.settings, "MP3_TIMEOUT_MS", 500))
+        return WT2605CPlayer(uart, timeout_ms=setting(self.settings, "MP3_TIMEOUT_MS", 1500))
 
     @staticmethod
     def _error_text(prefix, exc):
@@ -324,7 +324,7 @@ class PeripheralManager:
     async def audio_loop(self):
         if not self.audio["enabled"] or "audio" in self._validation:
             return
-        await sleep_ms(setting(self.settings, "MP3_STARTUP_MS", 2000))
+        await sleep_ms(setting(self.settings, "MP3_STARTUP_MS", 3000))
         while not self.closed:
             now = self.clock.ms()
             try:
@@ -333,7 +333,7 @@ class PeripheralManager:
                         await sleep_ms(100)
                         continue
                     self.player = self._new_player()
-                    result = await self.player.configure(volume=setting(self.settings, "MP3_VOLUME", 8))
+                    result = await self.player.configure(volume=setting(self.settings, "MP3_VOLUME", 7))
                     self._audio_success(result)
                     self.audio["status"] = "ready"
                     self._play_requested = False
